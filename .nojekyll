@@ -1,0 +1,2 @@
+# Create file with a comment
+echo "# Disable Jekyll processing - This site uses 11ty" > .nojekyll
