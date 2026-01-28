@@ -1,0 +1,387 @@
+---
+layout: layout.liquid
+title: Homepage
+pagination:
+  data: posts
+  size: 50
+---
+
+<main class="flex-grow pt-20 pb-12">
+  <!-- Hero Carousel Section -->
+  <div class="container mx-auto px-4 mb-12 relative h-[550px] md:h-[750px] w-full overflow-hidden z-10" id="hero-carousel">
+    {% assign hero_posts = posts | where: "popularity", 100 %}
+    {% assign hero_count = hero_posts.size %}
+    
+    {% if hero_count > 0 %}
+      {% for item in hero_posts limit: 10 %}
+      <div class="carousel-slide {% if forloop.first %}active{% endif %} w-full h-full rounded-2xl overflow-hidden relative group" data-slide-index="{{ forloop.index0 }}">
+        <img alt="{{ item.title }}" class="w-full h-full object-cover" src="{{ item.backdropUrl | default: item.posterUrl }}">
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 p-8 md:p-12 w-full md:w-2/3">
+          <div class="flex items-center gap-2 text-xs md:text-sm text-gray-300 mb-2">
+            {% for genre in item.genres limit: 3 %}
+            <span class="text-primary font-semibold">{{ genre }}</span>
+            {% if forloop.last == false %}<span>•</span>{% endif %}
+            {% endfor %}
+          </div>
+          <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">{{ item.title }}</h2>
+          <div class="flex items-center gap-3 text-xs md:text-sm text-white mb-4">
+            <span class="bg-yellow-500 text-black px-1.5 py-0.5 rounded font-bold text-[10px]">IMDb {{ item.imbdScore | default: item.rating }}</span>
+            <span class="border border-white/30 px-1.5 py-0.5 rounded text-[10px]">HD</span>
+            {% if item.certification %}
+            <span class="border border-white/30 px-1.5 py-0.5 rounded text-[10px]">{{ item.certification }}</span>
+            {% endif %}
+            <span>{{ item.duration }}</span>
+            <span>{{ item.airedYear }}</span>
+          </div>
+          <p class="text-gray-300 text-sm md:text-base line-clamp-3 mb-6 max-w-xl">
+            {{ item.description | truncate: 200 }}
+          </p>
+          <div class="flex items-center gap-4">
+            <a href="/show/{{ item.slug }}" class="bg-primary hover:bg-opacity-90 text-white font-semibold py-3 px-8 rounded-full flex items-center gap-2 transition-all shadow-lg shadow-primary/30 transform hover:-translate-y-0.5">
+              Watch Now <span class="material-symbols-outlined">play_circle</span>
+            </a>
+            <div class="relative group dropdown-container">
+              <button class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white w-12 h-12 rounded-full flex items-center justify-center transition-all border border-white/10 status-btn">
+                <span class="material-symbols-outlined">favorite</span>
+              </button>
+              <div class="absolute left-0 bottom-full mb-2 w-48 bg-surface-dark rounded-lg shadow-xl py-2 z-30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-700 text-sm">
+                <button class="block w-full text-left px-4 py-2 hover:bg-gray-800 text-gray-300" onclick="updateHeroStatus('Planning to watch', {{ forloop.index0 }})">Planning to watch</button>
+                <button class="block w-full text-left px-4 py-2 hover:bg-gray-800 text-gray-300" onclick="updateHeroStatus('Watching', {{ forloop.index0 }})">Watching</button>
+                <button class="block w-full text-left px-4 py-2 hover:bg-gray-800 text-gray-300" onclick="updateHeroStatus('Completed', {{ forloop.index0 }})">Completed</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <!-- Fallback if no hero posts -->
+      <div class="carousel-slide active w-full h-full rounded-2xl overflow-hidden relative group bg-gradient-to-br from-primary/20 to-gray-900 flex items-center justify-center">
+        <div class="text-center p-8">
+          <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Featured Content</h2>
+          <p class="text-gray-300 text-lg">No featured posts available</p>
+        </div>
+      </div>
+    {% endif %}
+    
+    {% if hero_count > 1 %}
+    <div class="absolute bottom-8 right-8 flex items-center gap-4 z-30">
+      <span class="text-white font-mono text-sm"><span id="current-slide-display">1</span> <span class="text-gray-500">/ {{ hero_count }}</span></span>
+      <div class="flex gap-2">
+        <button class="bg-white/10 hover:bg-white/20 backdrop-blur-md p-2 rounded text-white transition-colors border border-white/10" onclick="changeSlide(-1)">
+          <span class="material-symbols-outlined text-sm">arrow_back</span>
+        </button>
+        <button class="bg-white/10 hover:bg-white/20 backdrop-blur-md p-2 rounded text-white transition-colors border border-white/10" onclick="changeSlide(1)">
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Top Airing Section -->
+  <section class="container mx-auto px-4 mb-12">
+    <div class="flex justify-between items-end mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white border-l-4 border-primary pl-4">Top Airing</h2>
+      <div class="flex items-center gap-4">
+        <div class="hidden md:flex gap-2">
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('top-airing-scroll').scrollLeft -= 500">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('top-airing-scroll').scrollLeft += 500">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+        <a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary flex items-center gap-1 transition-colors group" href="/search?type=airing">
+          View all <span class="material-symbols-outlined text-base transform group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+    <div class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar snap-x snap-mandatory scroll-smooth" id="top-airing-scroll">
+      {% assign top_airing = "" | split: "" %}
+      {% for item in posts %}
+        {% if item.status contains "Ongoing" or item.status contains "Airing" or item.status contains "Currently" %}
+          {% assign top_airing = top_airing | push: item %}
+        {% endif %}
+      {% endfor %}
+      
+      {% if top_airing.size > 0 %}
+        {% for item in top_airing limit: 16 %}
+          {% include "card.liquid", show: item %}
+        {% endfor %}
+      {% else %}
+        <div class="flex-shrink-0 w-full text-center py-8 text-gray-500 dark:text-gray-400">
+          <p>No currently airing shows found</p>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Latest Movies Section -->
+  <section class="container mx-auto px-4 mb-12">
+    <div class="flex justify-between items-end mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white border-l-4 border-primary pl-4">Latest Movies</h2>
+      <div class="flex items-center gap-4">
+        <div class="hidden md:flex gap-2">
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('latest-movies-scroll').scrollLeft -= 500">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('latest-movies-scroll').scrollLeft += 500">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+        <a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary flex items-center gap-1 transition-colors group" href="/search?type=movie">
+          View all <span class="material-symbols-outlined text-base transform group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+    <div class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar snap-x snap-mandatory scroll-smooth" id="latest-movies-scroll">
+      {% assign movies = posts | where: "type", "movie" | sort: "airedYear", "last" %}
+      
+      {% if movies.size > 0 %}
+        {% for item in movies limit: 16 %}
+          {% include "card.liquid", show: item %}
+        {% endfor %}
+      {% else %}
+        <div class="flex-shrink-0 w-full text-center py-8 text-gray-500 dark:text-gray-400">
+          <p>No movies found</p>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Latest TV Shows Section -->
+  <section class="container mx-auto px-4 mb-12">
+    <div class="flex justify-between items-end mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white border-l-4 border-primary pl-4">Latest TV Shows</h2>
+      <div class="flex items-center gap-4">
+        <div class="hidden md:flex gap-2">
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('tv-shows-scroll').scrollLeft -= 500">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('tv-shows-scroll').scrollLeft += 500">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+        <a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary flex items-center gap-1 transition-colors group" href="/search?type=series">
+          View all <span class="material-symbols-outlined text-base transform group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+    <div class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar snap-x snap-mandatory scroll-smooth" id="tv-shows-scroll">
+      {% assign tv_shows = posts | where: "type", "series" | sort: "airedYear", "last" %}
+      
+      {% if tv_shows.size > 0 %}
+        {% for item in tv_shows limit: 16 %}
+          {% include "card.liquid", show: item %}
+        {% endfor %}
+      {% else %}
+        <div class="flex-shrink-0 w-full text-center py-8 text-gray-500 dark:text-gray-400">
+          <p>No TV shows found</p>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Latest Anime Section -->
+  <section class="container mx-auto px-4 mb-12">
+    <div class="flex justify-between items-end mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white border-l-4 border-primary pl-4">Latest Anime</h2>
+      <div class="flex items-center gap-4">
+        <div class="hidden md:flex gap-2">
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('anime-scroll').scrollLeft -= 500">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('anime-scroll').scrollLeft += 500">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+        <a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary flex items-center gap-1 transition-colors group" href="/search?type=anime">
+          View all <span class="material-symbols-outlined text-base transform group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+    <div class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar snap-x snap-mandatory scroll-smooth" id="anime-scroll">
+      {% assign anime = posts | where: "type", "anime" | sort: "airedYear", "last" %}
+      
+      {% if anime.size > 0 %}
+        {% for item in anime limit: 16 %}
+          {% include "card.liquid", show: item %}
+        {% endfor %}
+      {% else %}
+        <div class="flex-shrink-0 w-full text-center py-8 text-gray-500 dark:text-gray-400">
+          <p>No anime found</p>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Recommended Section -->
+  <section class="container mx-auto px-4 mb-12">
+    <div class="flex justify-between items-end mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white border-l-4 border-primary pl-4">Recommended</h2>
+      <div class="flex items-center gap-4">
+        <div class="hidden md:flex gap-2">
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('recommended-scroll').scrollLeft -= 500">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <button class="bg-gray-200 dark:bg-gray-800 p-1 rounded-full hover:text-primary transition-colors" onclick="document.getElementById('recommended-scroll').scrollLeft += 500">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+        <a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary flex items-center gap-1 transition-colors group" href="/search?rating=8.5">
+          View all <span class="material-symbols-outlined text-base transform group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+    <div class="flex overflow-x-auto gap-4 pb-4 hide-scrollbar snap-x snap-mandatory scroll-smooth" id="recommended-scroll">
+      {% assign recommended = "" | split: "" %}
+      {% for item in posts %}
+        {% if item.rating >= 8.5 or item.imbdScore >= 8.5 %}
+          {% assign recommended = recommended | push: item %}
+        {% endif %}
+      {% endfor %}
+      
+      {% if recommended.size > 0 %}
+        {% for item in recommended limit: 16 %}
+          {% include "card.liquid", show: item %}
+        {% endfor %}
+      {% else %}
+        <div class="flex-shrink-0 w-full text-center py-8 text-gray-500 dark:text-gray-400">
+          <p>No recommended shows found</p>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Most Popular Section -->
+  <section class="container mx-auto px-4 mb-12">
+    <div class="flex justify-between items-end mb-6 border-b border-gray-200 dark:border-gray-800 pb-2">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white border-l-4 border-primary pl-4">Most Popular</h2>
+      <div class="flex items-center gap-4">
+        <a class="text-sm text-gray-500 dark:text-gray-400 hover:text-primary flex items-center gap-1 transition-colors group" href="/search?popularity=95">
+          View all <span class="material-symbols-outlined text-base transform group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+    <div class="max-h-[80vh] overflow-y-auto hide-scrollbar pr-1">
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+        {% assign popular = "" | split: "" %}
+        {% for item in posts %}
+          {% if item.popularity >= 95 %}
+            {% assign popular = popular | push: item %}
+          {% endif %}
+        {% endfor %}
+        
+        {% assign popular = popular | sort: "popularity", "last" %}
+        
+        {% if popular.size > 0 %}
+          {% for item in popular %}
+            <a href="/show/{{ item.slug }}" class="group bg-white dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+              <div class="aspect-[2/3] relative overflow-hidden">
+                <img src="{{ item.posterUrl }}" alt="{{ item.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                <div class="absolute top-2 right-2 bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-sm">HD</div>
+                <div class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-sm flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[10px]">star</span> {{ item.imbdScore | default: item.rating }}
+                </div>
+                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <div class="bg-primary text-white rounded-full p-3 shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-2xl">play_arrow</span>
+                  </div>
+                </div>
+              </div>
+              <div class="p-3">
+                <h3 class="font-semibold text-gray-900 dark:text-white line-clamp-1 group-hover:text-primary transition-colors mb-1 text-sm">{{ item.title }}</h3>
+                <div class="flex justify-between items-center text-[10px] text-gray-500 dark:text-gray-400">
+                  <span>{{ item.airedYear }}</span>
+                  <span class="truncate max-w-[50px]">{{ item.type | capitalize }}</span>
+                </div>
+              </div>
+            </a>
+          {% endfor %}
+        {% else %}
+          <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+            <p>No popular shows found</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// Hero Carousel Logic
+let currentSlide = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+
+function changeSlide(direction) {
+  if (!slides.length || slides.length <= 1) return;
+  
+  slides[currentSlide].classList.remove('active');
+  currentSlide = (currentSlide + direction + slides.length) % slides.length;
+  slides[currentSlide].classList.add('active');
+  
+  const slideCounterDisplay = document.getElementById('current-slide-display');
+  if(slideCounterDisplay) slideCounterDisplay.innerText = currentSlide + 1;
+  
+  checkHeroStatus(currentSlide);
+}
+
+// Auto-advance slideshow
+if (slides.length > 1) {
+  setInterval(() => {
+    changeSlide(1);
+  }, 5000);
+}
+
+// Hero Heart Status Functions
+function updateHeroStatus(status, slideIndex = currentSlide) {
+  localStorage.setItem(`quravel_hero_status_${slideIndex}`, status);
+  console.log(`Saved status for slide ${slideIndex}: ${status}`);
+  checkHeroStatus(slideIndex);
+}
+
+function checkHeroStatus(slideIndex) {
+  const status = localStorage.getItem(`quravel_hero_status_${slideIndex}`);
+  const activeSlide = document.querySelector(`.carousel-slide[data-slide-index="${slideIndex}"]`);
+  if(activeSlide) {
+    const btn = activeSlide.querySelector('.status-btn');
+    if(btn) {
+      if(status) {
+        btn.classList.add('bg-primary', 'border-primary', 'text-white');
+        btn.classList.remove('bg-white/10', 'border-white/10');
+      } else {
+        btn.classList.remove('bg-primary', 'border-primary', 'text-white');
+        btn.classList.add('bg-white/10', 'border-white/10');
+      }
+    }
+  }
+}
+
+// Initialize hero status on page load
+document.addEventListener('DOMContentLoaded', () => {
+  if (slides.length > 0) {
+    checkHeroStatus(0);
+  }
+});
+
+// Search Functionality will be in the header.liquid
+// This is kept for compatibility with existing search functions
+
+// Make searchData available globally for search functionality
+window.allSearchData = [
+  {% for item in posts %}
+  {
+    img: "{{ item.posterUrl }}",
+    title: "{{ item.title | escape }}",
+    year: "{{ item.airedYear }}",
+    type: "{{ item.type }}",
+    genre: "{{ item.genres[0] | default: item.category | escape }}",
+    slug: "{{ item.slug }}",
+    searchableTitle: "{{ item.searchableTitle | default: item.title | escape }}"
+  }{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+];
+</script>
