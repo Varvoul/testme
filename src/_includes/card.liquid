@@ -1,0 +1,83 @@
+{% comment %}
+    Card component for show items
+    Usage: {% include 'card.liquid', show: item %}
+    
+    Required properties from posts.json:
+    - show.posterUrl: poster image URL
+    - show.title: show title
+    - show.airedYear: release year
+    - show.duration: duration (e.g., "142m")
+    - show.slug: URL slug for show detail page
+    - show.imdbScore or show.rating: rating score
+    - show.type: 'movie', 'series', or 'anime'
+    - show.seasons: array for TV shows/anime (optional)
+{% endcomment %}
+
+{% assign item = show %}
+
+<a href="/{{ item.type | downcase }}/{{ item.slug }}/" class="flex-shrink-0 w-40 sm:w-48 group snap-start bg-white dark:bg-surface-dark rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+    <div class="aspect-[2/3] relative overflow-hidden">
+        <!-- Use posterUrl from your data structure -->
+        <img src="{{ item.posterUrl }}" alt="{{ item.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+        
+        <!-- HD Badge -->
+        <div class="absolute top-2 right-2 bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-sm">HD</div>
+        
+        <!-- Rating/Episode Badge -->
+        <div class="absolute bottom-2 left-2 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-sm flex items-center gap-1">
+            {% if item.type == 'movie' %}
+                <!-- Movies show rating -->
+                <span class="material-symbols-outlined text-[10px]">star</span> 
+                {{ item.imbdScore | default: item.rating }}
+            {% elsif item.seasons and item.seasons[0] and item.seasons[0].episodes %}
+                <!-- TV Shows/Anime show episode count -->
+                Eps {{ item.seasons[0].episodes.size }}
+            {% else %}
+                <!-- Fallback for shows without episodes data -->
+                <span class="material-symbols-outlined text-[10px]">star</span> 
+                {{ item.imbdScore | default: item.rating }}
+            {% endif %}
+        </div>
+        
+        <!-- Play Button Overlay -->
+        <div class="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div class="bg-primary text-white rounded-full p-3 shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                <span class="material-symbols-outlined text-2xl">play_arrow</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Card Content -->
+    <div class="p-4">
+        <h3 class="font-semibold text-gray-900 dark:text-white line-clamp-1 group-hover:text-primary transition-colors mb-2">
+            {{ item.title }}
+        </h3>
+        <div class="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+            <span>{{ item.airedYear }}</span>
+            <span class="truncate max-w-[80px]">
+                {% case item.type %}
+                    {% when 'movie' %}
+                        Movie
+                    {% when 'series' %}
+                        TV Show
+                    {% when 'anime' %}
+                        Anime
+                    {% else %}
+                        {{ item.type | capitalize }}
+                {% endcase %}
+            </span>
+            <span>
+                {% if item.type == 'movie' %}
+                    <!-- Movies show duration -->
+                    {{ item.duration }}
+                {% elsif item.seasons %}
+                    <!-- TV Shows/Anime show season info -->
+                    SS {{ item.seasons.size }}
+                {% else %}
+                    <!-- Fallback -->
+                    {{ item.duration | default: 'Ongoing' }}
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</a>

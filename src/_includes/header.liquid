@@ -1,0 +1,805 @@
+<div class="container mx-auto px-4 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-4">
+        <button class="lg:hidden text-gray-600 dark:text-gray-200 focus:outline-none" onclick="toggleMobileMenu()">
+            <span class="material-symbols-outlined text-3xl">menu</span>
+        </button>
+        <nav class="hidden lg:flex items-center space-x-6 text-sm font-medium">
+            <a class="hover:text-primary transition-colors {% if page.url == '/' %}text-primary{% endif %}" href="/">Home</a>
+            <div class="relative group">
+                <button class="flex items-center space-x-1 hover:text-primary transition-colors focus:outline-none py-4">
+                    <span>Genre</span>
+                    <span class="material-symbols-outlined text-sm">expand_more</span>
+                </button>
+                <div class="absolute top-full left-0 w-[600px] bg-white dark:bg-[#1A1D29] rounded-b-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border-t-2 border-primary grid grid-cols-4 gap-4 p-6 z-50">
+                    {% assign all_genres = [] %}
+                    {% for post in posts %}
+                        {% for genre in post.genres %}
+                            {% assign all_genres = all_genres | push: genre %}
+                        {% endfor %}
+                    {% endfor %}
+                    {% assign unique_genres = all_genres | uniq | sort %}
+                    {% for genre in unique_genres limit: 16 %}
+                        <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="/search?genre={{ genre | url_encode }}">{{ genre }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="relative group">
+                <button class="flex items-center space-x-1 hover:text-primary transition-colors focus:outline-none py-4">
+                    <span>Country</span>
+                    <span class="material-symbols-outlined text-sm">expand_more</span>
+                </button>
+                <div class="absolute top-full left-0 w-[600px] bg-white dark:bg-[#1A1D29] rounded-b-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border-t-2 border-primary grid grid-cols-4 gap-4 p-6 z-50">
+                    {% assign all_countries = [] %}
+                    {% for post in posts %}
+                        {% if post.country %}
+                            {% assign all_countries = all_countries | push: post.country %}
+                        {% endif %}
+                    {% endfor %}
+                    {% assign unique_countries = all_countries | uniq | sort %}
+                    {% for country in unique_countries limit: 16 %}
+                        <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="/search?country={{ country | url_encode }}">{{ country }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            <a class="hover:text-primary transition-colors" href="/search?rating=8.5">Top IMDB</a>
+            <a class="hover:text-primary transition-colors" href="#">Updates</a>
+            <a class="hover:text-primary transition-colors" href="editor.wix.com/wixel-view/forms/7405900275916997729">Sent request</a>
+        </nav>
+    </div>
+    
+    <div class="absolute left-1/2 transform -translate-x-1/2">
+        <a class="block" href="/">
+            <img alt="Quravel Logo" class="h-8 md:h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqLjw2b3zIJYAUXSR-0wnqCCSiHxBpWopeX4YkK91UxQUQErP8E3fBTKHGPMn44svm6TkV73RcFl8uZYm6unBNmb_F5B0XAtvw-yAnSKJzR-DIoMzoWA519xKDUhoH8DE4biRu7joxNso-Ui3U1pLkiOaL02GPgdP6zHD6BmF10aMv5toxV6-cghRon9fHKmJihBEYz21Rmh4zx3Kz6pm1xk_o-fcYhwfAxeV0fx3eRLBxYIrLqzBBjdbVn1H1B5RVpSEDH9EgFZ4"/>
+        </a>
+    </div>
+    
+    <div class="flex items-center space-x-4">
+        <!-- Desktop Search -->
+        <div class="relative hidden sm:block group search-container">
+            <input class="bg-gray-100 dark:bg-gray-800 text-sm rounded-full py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary w-48 transition-all dark:text-white border-none group-focus-within:w-64" 
+                   id="desktop-search-input" 
+                   placeholder="Search movies, shows, anime..." 
+                   type="text"
+                   autocomplete="off"/>
+            <span class="material-symbols-outlined absolute right-3 top-2 text-gray-400 text-lg cursor-pointer hover:text-primary search-icon">search</span>
+            <div class="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-[#1A1D29] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden invisible group-focus-within:visible opacity-0 group-focus-within:opacity-100 transition-all duration-200 origin-top-right transform scale-95 group-focus-within:scale-100 z-50 search-results-container" 
+                 id="desktop-search-results">
+                <div class="search-suggestions-list max-h-[400px] overflow-y-auto hide-scrollbar p-2 space-y-1" 
+                     id="desktop-search-results-list"></div>
+                <div class="p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-gray-50 dark:bg-[#151926]">
+                    <button id="desktop-view-all-results" 
+                            class="text-xs font-semibold text-primary hover:text-primary/80 uppercase tracking-wide w-full">
+                        View all results
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Search Toggle -->
+        <button class="sm:hidden text-gray-600 dark:text-gray-200" onclick="toggleMobileSearch()">
+            <span class="material-symbols-outlined">search</span>
+        </button>
+    </div>
+</div>
+
+<!-- Mobile Search Bar -->
+<div class="hidden sm:hidden bg-white dark:bg-[#0B0E19] border-b border-gray-200 dark:border-gray-800 p-3 absolute w-full top-16 left-0 z-30" 
+     id="mobile-search-bar">
+    <div class="relative group mobile-search-container">
+        <input class="w-full bg-gray-100 dark:bg-gray-800 text-sm rounded-full py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary dark:text-white border-none" 
+               id="mobile-search-input" 
+               placeholder="Search movies, shows, anime..." 
+               type="text"
+               autocomplete="off"/>
+        <span class="material-symbols-outlined absolute right-3 top-2 text-gray-400 text-lg search-icon">search</span>
+        <div class="absolute left-0 top-full mt-2 w-full bg-white dark:bg-[#1A1D29] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden invisible group-focus-within:visible opacity-0 group-focus-within:opacity-100 transition-all duration-200 origin-top transform scale-95 group-focus-within:scale-100 z-50 search-results-container" 
+             id="mobile-search-results">
+            <div class="search-suggestions-list max-h-[300px] overflow-y-auto hide-scrollbar p-2 space-y-1" 
+                 id="mobile-search-results-list"></div>
+            <div class="p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-gray-50 dark:bg-[#151926]">
+                <button id="mobile-view-all-results" 
+                        class="text-xs font-semibold text-primary hover:text-primary/80 uppercase tracking-wide w-full">
+                    View all results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Menu -->
+<div class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" id="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+<div class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-[#151926] z-50 transform -translate-x-full lg:hidden overflow-y-auto shadow-2xl" id="mobile-menu">
+    <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <img alt="Quravel Logo" class="h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqiUc86NAc2oPWF0jZS6ltVT0qDRUQLGYe-vsh90aCjNPCKRUYsR2joEXfq121iCQ1DMhEXbbjY-Rm6ydRKKVvOD7XCHpsnpYv4oUDQP6h-KZ9tUpwQb33LAseATibNSPDDxAViL3XAYheHWPQCau7pQCd7-XFT2YjY86y-DFUxv6SfYoh27gsa2-RiKjPMnhZfSvjYzFQSeYDzy64a_9Lmf5_NT9MkYffdzHclH1EyMht0psBW3wqnbmTFh6wbG5Xh4VXCnRWONM"/>
+        <button class="text-gray-500 hover:text-primary" onclick="toggleMobileMenu()">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    <div class="p-4 space-y-4">
+        <a class="block text-sm font-medium hover:text-primary py-2 border-b border-gray-100 dark:border-gray-800 {% if page.url == '/' %}text-primary{% endif %}" href="/">Home</a>
+        <div class="py-2 border-b border-gray-100 dark:border-gray-800">
+            <button class="flex items-center justify-between w-full text-sm font-medium hover:text-primary focus:outline-none" onclick="toggleMobileDropdown('genre-mobile')">
+                <span>Genre</span>
+                <span class="material-symbols-outlined text-sm transform transition-transform" id="genre-arrow">expand_more</span>
+            </button>
+            <div class="hidden mt-2 ml-4 space-y-2 text-sm text-gray-500 dark:text-gray-400" id="genre-mobile">
+                {% assign all_genres = [] %}
+                {% for post in posts %}
+                    {% for genre in post.genres %}
+                        {% assign all_genres = all_genres | push: genre %}
+                    {% endfor %}
+                {% endfor %}
+                {% assign unique_genres = all_genres | uniq | sort %}
+                {% for genre in unique_genres limit: 8 %}
+                    <a class="block hover:text-primary" href="/search?genre={{ genre | url_encode }}">{{ genre }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="py-2 border-b border-gray-100 dark:border-gray-800">
+            <button class="flex items-center justify-between w-full text-sm font-medium hover:text-primary focus:outline-none" onclick="toggleMobileDropdown('country-mobile')">
+                <span>Country</span>
+                <span class="material-symbols-outlined text-sm transform transition-transform" id="country-arrow">expand_more</span>
+            </button>
+            <div class="hidden mt-2 ml-4 space-y-2 text-sm text-gray-500 dark:text-gray-400" id="country-mobile">
+                {% assign all_countries = [] %}
+                {% for post in posts %}
+                    {% if post.country %}
+                        {% assign all_countries = all_countries | push: post.country %}
+                    {% endif %}
+                {% endfor %}
+                {% assign unique_countries = all_countries | uniq | sort %}
+                {% for country in unique_countries limit: 8 %}
+                    <a class="block hover:text-primary" href="/search?country={{ country | url_encode }}">{{ country }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        <a class="block text-sm font-medium hover:text-primary py-2 border-b border-gray-100 dark:border-gray-800" href="/search?rating=8.5">Top IMDB</a>
+        <a class="block text-sm font-medium hover:text-primary py-2 border-b border-gray-100 dark:border-gray-800" href="/updates/">Updates</a>
+        <a class="block text-sm font-medium hover:text-primary py-2" href="editor.wix.com/wixel-view/forms/7405900275916997729">Sent request</a>
+    </div>
+</div>
+
+<script>
+// ============================================
+// MODERN SEARCH MANAGER (NEW IMPLEMENTATION)
+// ============================================
+class SearchManager {
+    constructor() {
+        this.liteData = [];
+        this.fullData = [];
+        this.cache = new Map();
+        this.isLiteLoaded = false;
+        this.isFullLoaded = false;
+        this.debounceTimers = {};
+        this.searchControllers = new Map(); // For aborting previous searches
+    }
+
+    // Load lite data for dropdowns (optimized)
+    async loadLiteData() {
+        if (this.isLiteLoaded) return;
+        
+        try {
+            // Try to fetch from search-index.json with lite mode
+            const response = await fetch('/search-index.json?mode=lite');
+            if (!response.ok) {
+                // Fallback to regular search-index.json
+                const fallbackResponse = await fetch('/search-index.json');
+                const data = await fallbackResponse.json();
+                this.liteData = data.posts || [];
+            } else {
+                const data = await response.json();
+                this.liteData = data.posts || [];
+            }
+            
+            // Prepare data for search
+            this.liteData = this.liteData.map(item => ({
+                ...item,
+                searchLower: `${item.title} ${item.searchableTitle || ''} ${item.genres ? item.genres.join(' ') : ''}`.toLowerCase(),
+                url: item.url || `/show/${item.slug}/`
+            }));
+            
+            this.isLiteLoaded = true;
+            console.log(`✓ Loaded ${this.liteData.length} items for dropdown search`);
+        } catch (error) {
+            console.error('Error loading search data:', error);
+            this.loadFallbackData();
+        }
+    }
+
+    // Load fallback data from inline script
+    loadFallbackData() {
+        if (window.allSearchData && window.allSearchData.length > 0) {
+            this.liteData = window.allSearchData.map(item => ({
+                ...item,
+                searchLower: `${item.title} ${item.searchableTitle || ''}`.toLowerCase(),
+                url: item.url || `/show/${item.slug}/`
+            }));
+            this.isLiteLoaded = true;
+            console.log(`✓ Loaded ${this.liteData.length} fallback search items`);
+        }
+    }
+
+    // Search function with debouncing and abort control
+    async searchDropdown(query, limit = 5) {
+        query = query.toLowerCase().trim();
+        if (!query || query.length < 2) return [];
+        
+        // Check cache first
+        const cacheKey = `dropdown_${query}_${limit}`;
+        if (this.cache.has(cacheKey)) {
+            return this.cache.get(cacheKey);
+        }
+        
+        // Cancel previous search if still running
+        if (this.searchControllers.has('dropdown')) {
+            this.searchControllers.get('dropdown').abort();
+        }
+        
+        // Create new abort controller
+        const controller = new AbortController();
+        this.searchControllers.set('dropdown', controller);
+        
+        try {
+            // Wait for data to be loaded if not already
+            if (!this.isLiteLoaded) {
+                await this.loadLiteData();
+            }
+            
+            // If still no data, return empty
+            if (this.liteData.length === 0) return [];
+            
+            // Simple but effective search algorithm
+            const results = this.liteData.filter(item => {
+                return item.searchLower.includes(query);
+            })
+            .sort((a, b) => {
+                // Prioritize exact title matches
+                const aExact = a.title.toLowerCase() === query;
+                const bExact = b.title.toLowerCase() === query;
+                if (aExact && !bExact) return -1;
+                if (!aExact && bExact) return 1;
+                
+                // Then by searchable title matches
+                const aTitleMatch = a.title.toLowerCase().includes(query);
+                const bTitleMatch = b.title.toLowerCase().includes(query);
+                if (aTitleMatch && !bTitleMatch) return -1;
+                if (!aTitleMatch && bTitleMatch) return 1;
+                
+                // Then by popularity/rating
+                return (b.popularity || b.rating || 0) - (a.popularity || a.rating || 0);
+            })
+            .slice(0, limit);
+            
+            // Cache results for 2 minutes
+            this.cache.set(cacheKey, results);
+            setTimeout(() => this.cache.delete(cacheKey), 2 * 60 * 1000);
+            
+            return results;
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Search was aborted');
+                return [];
+            }
+            console.error('Search error:', error);
+            return [];
+        }
+    }
+
+    // Clear old cache entries
+    clearOldCache() {
+        // Keep cache size reasonable
+        if (this.cache.size > 50) {
+            const keys = Array.from(this.cache.keys());
+            for (let i = 0; i < 20; i++) {
+                this.cache.delete(keys[i]);
+            }
+        }
+    }
+}
+
+// Global search manager instance
+const searchManager = new SearchManager();
+
+// ============================================
+// INITIALIZATION
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize search manager
+    searchManager.loadLiteData();
+    
+    // Set up desktop search
+    const desktopSearch = new SearchInterface('desktop');
+    desktopSearch.init();
+    
+    // Set up mobile search
+    const mobileSearch = new SearchInterface('mobile');
+    mobileSearch.init();
+    
+    // Set up mobile menu
+    initMobileMenu();
+    
+    // Clear cache periodically
+    setInterval(() => {
+        searchManager.clearOldCache();
+    }, 5 * 60 * 1000);
+    
+    // Preload search data when user hovers over search input
+    preloadSearchOnHover();
+});
+
+// ============================================
+// SEARCH INTERFACE CLASS
+// ============================================
+class SearchInterface {
+    constructor(type) {
+        this.type = type;
+        this.inputId = `${type}-search-input`;
+        this.resultsListId = `${type}-search-results-list`;
+        this.resultsContainerId = `${type}-search-results`;
+        this.viewAllButtonId = `${type}-view-all-results`;
+        this.isActive = false;
+        this.lastQuery = '';
+    }
+
+    init() {
+        const input = document.getElementById(this.inputId);
+        const resultsList = document.getElementById(this.resultsListId);
+        const resultsContainer = document.getElementById(this.resultsContainerId);
+        const viewAllButton = document.getElementById(this.viewAllButtonId);
+
+        if (!input || !resultsList || !resultsContainer || !viewAllButton) return;
+
+        // Input event with debouncing
+        input.addEventListener('input', this.debounce((e) => {
+            this.handleInput(e.target.value);
+        }, 300));
+
+        // Enter key to go to search page
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.handleEnterKey(input.value);
+            }
+        });
+
+        // Focus events
+        input.addEventListener('focus', () => {
+            this.isActive = true;
+            // If there's a previous query, show results
+            if (input.value.trim()) {
+                this.handleInput(input.value);
+            }
+        });
+
+        input.addEventListener('blur', () => {
+            this.isActive = false;
+        });
+
+        // View all results button
+        viewAllButton.addEventListener('click', () => {
+            this.handleViewAll(input.value);
+        });
+
+        // Store references
+        this.input = input;
+        this.resultsList = resultsList;
+        this.resultsContainer = resultsContainer;
+        this.viewAllButton = viewAllButton;
+    }
+
+    debounce(func, wait) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    async handleInput(query) {
+        query = query.trim();
+        this.lastQuery = query;
+        
+        if (!query || query.length < 1) {
+            this.hideResults();
+            return;
+        }
+
+        // Show loading state
+        this.showLoading();
+
+        try {
+            const results = await searchManager.searchDropdown(query, 5);
+            this.displayResults(results, query);
+        } catch (error) {
+            console.error('Search failed:', error);
+            this.showError(query);
+        }
+    }
+
+    handleEnterKey(query) {
+        query = query.trim();
+        if (query) {
+            window.location.href = `/search/?q=${encodeURIComponent(query)}`;
+        }
+    }
+
+    handleViewAll(query) {
+        query = query.trim();
+        if (query) {
+            window.location.href = `/search/?q=${encodeURIComponent(query)}`;
+        }
+    }
+
+    showLoading() {
+        this.resultsList.innerHTML = `
+            <div class="p-4 text-center">
+                <div class="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Searching...</p>
+            </div>
+        `;
+        this.showResults();
+    }
+
+    displayResults(results, query) {
+        if (results.length > 0) {
+            let html = '';
+            results.forEach(item => {
+                const typeClass = this.getTypeClass(item.type);
+                const genres = Array.isArray(item.genres) ? item.genres.slice(0, 2).join(', ') : '';
+                
+                html += `
+                    <a href="${item.url}" class="flex gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0 group/item">
+                        <img src="${item.posterUrl}" alt="${item.title}" 
+                             class="w-10 h-14 object-cover rounded shadow-sm flex-shrink-0"
+                             loading="lazy"
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNTYiIHZpZXdCb3g9IjAgMCA0MCA1NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNTYiIGZpbGw9IiNGM0Y0RjYiLz48cGF0aCBkPSJNMTIgMjJMMjggMzRMMzYgMjRMMzQgMTZMMjIgMTJMMTAgMThMMTIgMjJaIiBmaWxsPSIjNDk4QkJCIiBmaWxsLW9wYWNpdHk9IjAuMyIvPjwvc3ZnPg=='">
+                        <div class="flex flex-col justify-center flex-1 min-w-0">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover/item:text-primary mb-1">
+                                ${this.highlightText(item.title, query)}
+                            </h4>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                <span>${item.airedYear || ''}</span>
+                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span class="px-1 py-0.5 ${typeClass} text-white text-[10px] rounded">${item.type || 'Show'}</span>
+                                ${genres ? `<span class="w-1 h-1 bg-gray-400 rounded-full"></span><span class="truncate">${genres}</span>` : ''}
+                            </div>
+                        </div>
+                    </a>
+                `;
+            });
+            
+            this.resultsList.innerHTML = html;
+            this.viewAllButton.textContent = `View all results (${results.length})`;
+            this.showResults();
+        } else {
+            this.resultsList.innerHTML = `
+                <div class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No results found for "${query}"
+                    <p class="text-xs mt-1">Try different keywords</p>
+                </div>
+            `;
+            this.showResults();
+        }
+    }
+
+    showError(query) {
+        this.resultsList.innerHTML = `
+            <div class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                Search temporarily unavailable
+                <p class="text-xs mt-1">Try again in a moment</p>
+            </div>
+        `;
+        this.showResults();
+    }
+
+    showResults() {
+        this.resultsContainer.classList.remove('hidden');
+        this.resultsContainer.style.visibility = 'visible';
+        this.resultsContainer.style.opacity = '1';
+    }
+
+    hideResults() {
+        this.resultsContainer.classList.add('hidden');
+    }
+
+    getTypeClass(type) {
+        switch((type || '').toLowerCase()) {
+            case 'anime': return 'bg-purple-500';
+            case 'movie': return 'bg-blue-500';
+            case 'series': return 'bg-green-500';
+            default: return 'bg-gray-500';
+        }
+    }
+
+    highlightText(text, query) {
+        if (!query || !text) return text;
+        const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<span class="text-primary font-bold">$1</span>');
+    }
+}
+
+// ============================================
+// MOBILE MENU FUNCTIONS
+// ============================================
+function initMobileMenu() {
+    // Mobile menu toggle
+    const genreArrow = document.getElementById('genre-arrow');
+    const countryArrow = document.getElementById('country-arrow');
+    
+    if (genreArrow) {
+        genreArrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleMobileDropdown('genre-mobile', 'genre-arrow');
+        });
+    }
+    
+    if (countryArrow) {
+        countryArrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleMobileDropdown('country-mobile', 'country-arrow');
+        });
+    }
+}
+
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobile-menu');
+    const overlay = document.getElementById('mobile-menu-overlay');
+    const isOpening = !menu.classList.contains('menu-open');
+    
+    if (isOpening) {
+        menu.classList.add('menu-open');
+        overlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    } else {
+        menu.classList.remove('menu-open');
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+function toggleMobileSearch() {
+    const searchBar = document.getElementById('mobile-search-bar');
+    const isVisible = !searchBar.classList.contains('hidden');
+    
+    if (isVisible) {
+        searchBar.classList.add('hidden');
+    } else {
+        searchBar.classList.remove('hidden');
+        // Focus input after a small delay
+        setTimeout(() => {
+            const input = document.getElementById('mobile-search-input');
+            if (input) {
+                input.focus();
+                // Show keyboard on mobile
+                input.click();
+            }
+        }, 100);
+    }
+}
+
+function toggleMobileDropdown(dropdownId, arrowId) {
+    const dropdown = document.getElementById(dropdownId);
+    const arrow = document.getElementById(arrowId);
+    
+    if (!dropdown || !arrow) return;
+    
+    const isHidden = dropdown.classList.contains('hidden');
+    
+    if (isHidden) {
+        dropdown.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        dropdown.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+function preloadSearchOnHover() {
+    const searchInputs = ['desktop-search-input', 'mobile-search-input'];
+    
+    searchInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            // Preload search data when user hovers over search input
+            input.addEventListener('mouseenter', () => {
+                if (!searchManager.isLiteLoaded) {
+                    searchManager.loadLiteData();
+                }
+            });
+            
+            input.addEventListener('touchstart', () => {
+                if (!searchManager.isLiteLoaded) {
+                    searchManager.loadLiteData();
+                }
+            }, { passive: true });
+        }
+    });
+}
+
+// Close search results when clicking outside
+document.addEventListener('click', function(event) {
+    // Check desktop search
+    const desktopSearch = document.getElementById('desktop-search-results');
+    const desktopInput = document.getElementById('desktop-search-input');
+    const desktopContainer = document.querySelector('.search-container');
+    
+    if (desktopSearch && desktopInput && desktopContainer) {
+        if (!desktopContainer.contains(event.target)) {
+            desktopSearch.classList.add('hidden');
+        }
+    }
+    
+    // Check mobile search
+    const mobileSearch = document.getElementById('mobile-search-results');
+    const mobileInput = document.getElementById('mobile-search-input');
+    const mobileContainer = document.querySelector('.mobile-search-container');
+    const mobileSearchBar = document.getElementById('mobile-search-bar');
+    
+    if (mobileSearch && mobileInput && mobileContainer) {
+        // If clicking outside the search container and not on the search toggle button
+        if (!mobileContainer.contains(event.target) && 
+            !event.target.closest('button[onclick="toggleMobileSearch()"]')) {
+            mobileSearch.classList.add('hidden');
+        }
+    }
+});
+
+// ============================================
+// BACKWARD COMPATIBILITY
+// ============================================
+// Keep old function for compatibility with existing code
+window.handleSearch = function(query, resultsContainerId) {
+    const container = document.getElementById(resultsContainerId);
+    if (!container) return;
+    
+    const list = container.querySelector('.search-suggestions-list');
+    const viewAllButton = container.querySelector('button');
+    
+    if (!query || query.trim().length < 1) {
+        container.classList.add('hidden');
+        return;
+    }
+    
+    // Use new search manager
+    searchManager.searchDropdown(query, 7).then(results => {
+        if (results.length > 0) {
+            let html = '';
+            results.forEach(item => {
+                html += `
+                    <a href="${item.url}" class="flex gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0">
+                        <img src="${item.posterUrl}" alt="${item.title}" class="w-10 h-14 object-cover rounded shadow-sm flex-shrink-0">
+                        <div class="flex flex-col justify-center">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-tight mb-1">${item.title}</h4>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                <span>${item.airedYear}</span>
+                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span>${item.type}</span>
+                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span>${Array.isArray(item.genres) ? item.genres[0] : item.category || ''}</span>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            });
+            
+            list.innerHTML = html;
+            
+            if (viewAllButton) {
+                viewAllButton.textContent = `View all results (${results.length})`;
+                viewAllButton.onclick = function() {
+                    window.location.href = `/search/?q=${encodeURIComponent(query)}`;
+                };
+            }
+            
+            container.classList.remove('hidden');
+        } else {
+            list.innerHTML = `
+                <div class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No results found for "${query}"
+                </div>
+            `;
+            container.classList.remove('hidden');
+        }
+    }).catch(error => {
+        console.error('Search failed:', error);
+        list.innerHTML = `
+            <div class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                Search temporarily unavailable
+            </div>
+        `;
+        container.classList.remove('hidden');
+    });
+};
+
+// Initialize when DOM is ready (alternative to DOMContentLoaded)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Already handled above, but keep for safety
+    });
+} else {
+    // DOM already loaded
+    searchManager.loadLiteData();
+}
+</script>
+
+<style>
+/* Additional styles for better search UI */
+.search-results-container {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.search-container .search-icon,
+.mobile-search-container .search-icon {
+    transition: color 0.2s ease;
+    pointer-events: none; /* Prevent icon from interfering with input focus */
+}
+
+/* Mobile menu animations */
+#mobile-menu {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#mobile-menu.menu-open {
+    transform: translateX(0);
+}
+
+/* Search input focus styles */
+#desktop-search-input:focus,
+#mobile-search-input:focus {
+    box-shadow: 0 0 0 3px rgba(73, 139, 187, 0.1);
+}
+
+/* Loading animation */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Image fallback styling */
+img[onerror] {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.dark img[onerror] {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+/* Hide scrollbar but allow scrolling */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Smooth transitions */
+.search-suggestions-list a {
+    transition: all 0.2s ease;
+}
+
+/* Mobile search bar transitions */
+#mobile-search-bar {
+    transition: all 0.3s ease;
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 640px) {
+    #mobile-search-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .search-suggestions-list a {
+        padding: 12px;
+    }
+}
+</style>
