@@ -1,0 +1,497 @@
+---
+layout: layout.liquid
+pagination:
+    data: posts
+    size: 1
+    alias: show
+permalink: "/{{ show.type | downcase }}/{{ show.slug }}/"
+title: "{{ show.title }} - Quravel"
+---
+
+<main class="flex-grow pt-24 pb-12">
+  <div class="container mx-auto px-4">
+    <!-- Show Details Section -->
+    <div class="bg-white dark:bg-[#151926] rounded-2xl p-6 md:p-8 lg:p-10 shadow-lg mb-12 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none opacity-20"></div>
+      <div class="flex flex-col md:flex-row gap-8 lg:gap-12 relative z-10">
+        <!-- Poster Image -->
+        <div class="flex-shrink-0 mx-auto md:mx-0 w-64 md:w-72 lg:w-80 relative group">
+          <img alt="{{ show.title }}" class="w-full h-auto rounded-xl shadow-2xl object-cover aspect-[2/3] transform transition duration-500 hover:scale-[1.02]" src="{{ show.posterUrl }}">
+          <div class="absolute inset-0 rounded-xl ring-1 ring-white/10 pointer-events-none"></div>
+        </div>
+        
+        <!-- Show Information -->
+        <div class="flex-grow flex flex-col justify-start text-center md:text-left">
+          <!-- Breadcrumb -->
+          <div class="text-primary text-sm font-semibold mb-2 uppercase tracking-wide">
+            <a href="/" class="hover:underline">Home</a> • 
+            <a href="/{{ show.type | downcase }}/" class="hover:underline">{{ show.type | capitalize }}</a> • 
+            {{ show.genres[0] | default: show.category }}
+          </div>
+          
+          <!-- Title -->
+          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">{{ show.title }}</h1>
+          
+          <!-- Ratings and Info Badges -->
+          <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-6 text-sm">
+            <div class="flex items-center space-x-1 bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded border border-yellow-500/20">
+              <span class="material-symbols-outlined text-base">star</span>
+              <span class="font-bold">{{ show.imbdScore | default: show.rating }}</span>
+              <span class="text-xs opacity-70">IMDb</span>
+            </div>
+            <div class="px-2 py-0.5 rounded border border-primary text-primary bg-primary/10 text-xs font-mono font-bold">HD</div>
+            {% if show.certification %}
+            <span class="px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 text-xs">{{ show.certification }}</span>
+            {% endif %}
+            <span class="text-gray-500 dark:text-gray-400">• {{ show.type | capitalize }}</span>
+            <span class="text-gray-500 dark:text-gray-400">• {{ show.airedYear }}</span>
+            <span class="text-gray-500 dark:text-gray-400">• {{ show.duration }}</span>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-8">
+            {% if show.seasons %}
+              <!-- For shows with seasons, link to first season first episode -->
+              {% assign first_season = show.seasons[0] %}
+              {% assign first_episode = first_season.episodes[0] %}
+              <a href="/watch/{{ show.slug }}/" class="bg-primary hover:bg-opacity-90 text-white font-semibold py-3 px-8 rounded-full flex items-center gap-2 transition-all shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 w-full md:w-auto justify-center">
+                <span class="material-symbols-outlined">play_arrow</span>
+                Watch now
+              </a>
+            {% else %}
+              <!-- For movies, link directly to watch page -->
+              <a href="/watch/{{ show.slug }}/" class="bg-primary hover:bg-opacity-90 text-white font-semibold py-3 px-8 rounded-full flex items-center gap-2 transition-all shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 w-full md:w-auto justify-center">
+                <span class="material-symbols-outlined">play_arrow</span>
+                Watch now
+              </a>
+            {% endif %}
+            
+            <!-- Add to List Dropdown -->
+            <div class="relative group dropdown-container w-full md:w-auto">
+              <button class="bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-800 dark:text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-colors w-full md:w-auto" id="add-to-list-btn-{{ show.slug }}">
+                <span class="material-symbols-outlined">add</span>
+                <span id="current-list-status-{{ show.slug }}">Add to list</span>
+                <span class="material-symbols-outlined text-sm ml-1">expand_more</span>
+              </button>
+              <div class="absolute left-0 top-full mt-2 w-full md:w-56 bg-white dark:bg-surface-dark rounded-lg shadow-xl py-2 z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200 dark:border-gray-700 text-sm">
+                <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" onclick="updateListStatus('Planning to watch', '{{ show.slug }}')">Planning to watch</button>
+                <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" onclick="updateListStatus('Watching', '{{ show.slug }}')">Watching</button>
+                <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" onclick="updateListStatus('Completed', '{{ show.slug }}')">Completed</button>
+                <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" onclick="updateListStatus('Re-watching', '{{ show.slug }}')">Re-watching</button>
+                <button class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" onclick="updateListStatus('Dropped', '{{ show.slug }}')">Dropped</button>
+                <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                <button class="block w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500" onclick="updateListStatus('Add to list', '{{ show.slug }}')">Remove from list</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Description and Details Grid -->
+          <div class="grid md:grid-cols-5 gap-8 text-sm">
+            <!-- Description -->
+            <div class="md:col-span-3">
+              <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+                {{ show.description }}
+              </p>
+              <!-- Share Section -->
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                  <img alt="User Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKepUuUHAz1GAAh9d1TP86fQ1cNEGF_A7Fi00ANN4rMbe5iAkgL18ZwXQ_bLabOJGS3Iw3kmWCMR-_bC6J8ZAQj7Fa0-ag_YKIFuGatJ4ZNgTMz3biJI_2j3tsHgv6s5Plmkoc0FaWk6FRXJ7WJDhwAwq6eIC8fEwWyZ8Qvnrk_GSsXRCVgO8Pvsa1YoJHTDbL3GoE4tSEYDIt8M5edImu39b2CQwvrurfgk06BuS_MZ3XIZgyYP78SnTXm3iVxTS6JSkhKhF0G4U">
+                </div>
+                <div class="text-xs">
+                  <div class="font-bold text-primary">Share Quravel</div>
+                  <div class="text-gray-500">to your friends</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Detailed Info -->
+            <div class="md:col-span-2 space-y-4 text-gray-600 dark:text-gray-400 border-l border-gray-200 dark:border-gray-700 pl-0 md:pl-6">
+              <!-- Title -->
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Title:</span>
+                <span class="col-span-2 text-xs">{{ show.title }}</span>
+              </div>
+              
+              <!-- Original Title -->
+              {% if show.originalTitle and show.originalTitle != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Original:</span>
+                <span class="col-span-2 text-xs">{{ show.originalTitle }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Japanese Title -->
+              {% if show.japaneseTitle and show.japaneseTitle != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Japanese:</span>
+                <span class="col-span-2 text-xs truncate">{{ show.japaneseTitle }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Synonyms -->
+              {% if show.synonyms and show.synonyms != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Synonyms:</span>
+                <span class="col-span-2 text-xs">{{ show.synonyms | join: ', ' }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Country -->
+              {% if show.country and show.country != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Country:</span>
+                <span class="col-span-2 text-xs">{{ show.country }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Aired Year -->
+              {% if show.airedYear and show.airedYear != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Aired:</span>
+                <span class="col-span-2 text-xs">{{ show.airedYear }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Premiered -->
+              {% if show.premiered and show.premiered != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Premiered:</span>
+                <span class="col-span-2 text-xs">{{ show.premiered }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Duration -->
+              {% if show.duration and show.duration != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Duration:</span>
+                <span class="col-span-2 text-xs">{{ show.duration }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Status -->
+              {% if show.status and show.status != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Status:</span>
+                <span class="col-span-2 text-xs">{{ show.status }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Genres -->
+              {% if show.genres and show.genres != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Genres:</span>
+                <div class="col-span-2 flex flex-wrap gap-1">
+                  {% for genre in show.genres %}
+                  <a class="border border-gray-300 dark:border-gray-600 rounded px-1.5 py-0.5 text-[10px] hover:text-primary hover:border-primary transition" href="/search?genre={{ genre | url_encode }}">
+                    {{ genre }}
+                  </a>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+              
+              <!-- Cast -->
+              {% if show.cast and show.cast != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Cast:</span>
+                <span class="col-span-2 text-xs">
+                  {% if show.cast.size > 3 %}
+                    {{ show.cast | slice: 0, 3 | join: ', ' }}...
+                  {% else %}
+                    {{ show.cast | join: ', ' }}
+                  {% endif %}
+                </span>
+              </div>
+              {% endif %}
+              
+              <!-- Scores -->
+              {% assign has_mal = false %}
+              {% assign has_imdb = false %}
+              
+              {% if show.malScore and show.malScore != empty %}
+                {% assign has_mal = true %}
+              {% endif %}
+              
+              {% if show.imdbScore and show.imdbScore != empty %}
+                {% assign has_imdb = true %}
+              {% elsif show.rating and show.rating != empty %}
+                {% assign has_imdb = true %}
+              {% endif %}
+              
+              {% if has_mal or has_imdb %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Score:</span>
+                <div class="col-span-2 text-xs flex items-center gap-3">
+                  <!-- MAL Score -->
+                  {% if has_mal %}
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px] text-blue-500">star</span> 
+                    MAL: {{ show.malScore }}
+                  </span>
+                  {% endif %}
+                  
+                  <!-- Separator (only if both scores exist) -->
+                  {% if has_mal and has_imdb %}
+                  <span class="text-gray-300 dark:text-gray-600">|</span>
+                  {% endif %}
+                  
+                  <!-- IMDb Score -->
+                  {% if has_imdb %}
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px] text-yellow-500">star</span> 
+                    IMDb: 
+                    {% if show.imdbScore and show.imdbScore != empty %}
+                      {{ show.imdbScore }}
+                    {% elsif show.rating and show.rating != empty %}
+                      {{ show.rating }}
+                    {% endif %}
+                  </span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endif %}
+              
+              <!-- Studio -->
+              {% if show.studio and show.studio != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Studio:</span>
+                <span class="col-span-2 text-xs text-primary">{{ show.studio }}</span>
+              </div>
+              {% endif %}
+              
+              <!-- Producers -->
+              {% if show.producers and show.producers != empty %}
+              <div class="grid grid-cols-3 gap-2">
+                <span class="font-medium text-gray-900 dark:text-white">Producers:</span>
+                <span class="col-span-2 text-xs text-primary">
+                  {{ show.producers | join: ', ' }}
+                </span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Seasons Section (for TV Shows and Anime) -->
+    {% if show.seasons and show.seasons.size > 0 %}
+    <div class="bg-white dark:bg-[#151926] rounded-2xl p-6 md:p-8 shadow-lg mb-12">
+      <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white border-l-4 border-primary pl-4">Seasons & Episodes</h2>
+      <div class="space-y-6">
+        {% for season in show.seasons %}
+        <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+          <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Season {{ season.seasonNumber }}</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {% for episode in season.episodes %}
+            <a href="/watch/{{ show.slug }}/?season={{ season.seasonNumber }}&episode={{ episode.number }}" class="bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-3 transition-colors group">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-primary text-sm">play_circle</span>
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white group-hover:text-primary transition-colors">
+                    Episode {{ episode.number }}
+                  </div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ episode.title }}</div>
+                  <div class="text-[10px] text-gray-400 mt-0.5">{{ episode.duration }}</div>
+                </div>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- "You May Like This" Section -->
+    <div class="mb-12">
+      <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white border-l-4 border-primary pl-4">You may like this</h2>
+      <div class="relative group">
+        <div class="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background-light dark:from-background-dark to-transparent z-10 pointer-events-none"></div>
+        <div class="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background-light dark:from-background-dark to-transparent z-10 pointer-events-none"></div>
+        <button class="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary text-white p-2 rounded-full shadow-lg transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300" onclick="scrollContainer('left')">
+          <span class="material-symbols-outlined text-2xl">chevron_left</span>
+        </button>
+        <button class="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-black/60 hover:bg-primary text-white p-2 rounded-full shadow-lg transform translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300" onclick="scrollContainer('right')">
+          <span class="material-symbols-outlined text-2xl">chevron_right</span>
+        </button>
+        
+        <div class="flex overflow-x-auto gap-4 pb-6 pt-2 px-2 hide-scrollbar snap-x snap-mandatory scroll-smooth" id="recommendations-container">
+          {% comment %}
+            Find similar shows based on:
+            1. Same genre (priority)
+            2. Similar rating (± 1.0)
+            3. Same type (movie/series/anime)
+            4. Exclude current show
+          {% endcomment %}
+          
+          {% assign current_genres = show.genres %}
+          {% assign current_rating = show.imbdScore | default: show.rating %}
+          
+          {% for post in posts %}
+            {% comment %} Skip the current show {% endcomment %}
+            {% if post.id != show.id %}
+              {% comment %} Check if similar {% endcomment %}
+              {% assign is_similar = false %}
+              
+              {% comment %} Check genre match {% endcomment %}
+              {% for genre in current_genres %}
+                {% if post.genres contains genre %}
+                  {% assign is_similar = true %}
+                {% endif %}
+              {% endfor %}
+              
+              {% comment %} Check rating similarity (within 1.0) {% endcomment %}
+              {% assign post_rating = post.imbdScore | default: post.rating %}
+              {% assign rating_diff = current_rating | minus: post_rating | abs %}
+              {% if rating_diff <= 1.0 %}
+                {% assign is_similar = true %}
+              {% endif %}
+              
+              {% comment %} Check same type {% endcomment %}
+              {% if post.type == show.type %}
+                {% assign is_similar = true %}
+              {% endif %}
+              
+              {% comment %} Also include other seasons of the same show {% endcomment %}
+              {% if post.title contains show.title or show.title contains post.title %}
+                {% assign is_similar = true %}
+              {% endif %}
+              
+              {% if is_similar %}
+                <a class="flex-shrink-0 w-40 sm:w-48 group snap-start" href="/{{ post.type | downcase }}/{{ post.slug }}/">
+                  <div class="relative aspect-[2/3] rounded-lg overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:shadow-primary/20">
+                    <img alt="{{ post.title }}" class="w-full h-full object-cover" src="{{ post.posterUrl }}">
+                    <div class="absolute top-2 right-2 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">HD</div>
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div class="bg-white/20 backdrop-blur rounded-full p-3 text-white">
+                        <span class="material-symbols-outlined text-2xl">play_arrow</span>
+                      </div>
+                    </div>
+                  </div>
+                  <h3 class="font-medium text-sm text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">{{ post.title }}</h3>
+                  <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 gap-2">
+                    <span>{{ post.airedYear }}</span>
+                    <span class="w-1 h-1 bg-gray-500 rounded-full"></span>
+                    <span>{{ post.type | capitalize }}</span>
+                  </div>
+                </a>
+              {% endif %}
+            {% endif %}
+            
+            {% comment %} Limit to 8 recommendations {% endcomment %}
+            {% if forloop.index >= 20 %}{% break %}{% endif %}
+          {% endfor %}
+          
+          {% comment %} Fallback if no similar shows found {% endcomment %}
+          {% assign recommendations_count = 0 %}
+          {% for post in posts %}
+            {% if post.id != show.id %}
+              {% assign has_common_genre = false %}
+              {% for genre in current_genres %}
+                {% if post.genres contains genre %}
+                  {% assign has_common_genre = true %}
+                  {% break %}
+                {% endif %}
+              {% endfor %}
+              {% if has_common_genre %}
+                {% assign recommendations_count = recommendations_count | plus: 1 %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+          
+          {% if recommendations_count == 0 %}
+            {% comment %} Show random popular shows as fallback {% endcomment %}
+            {% assign popular_fallback = "" | split: "" %}
+            {% for item in posts %}
+              {% if item.popularity >= 90 and item.id != show.id %}
+                {% assign popular_fallback = popular_fallback | push: item %}
+              {% endif %}
+            {% endfor %}
+            
+            {% for item in popular_fallback limit: 8 %}
+              <a class="flex-shrink-0 w-40 sm:w-48 group snap-start" href="/{{ item.type | downcase }}/{{ item.slug }}/">
+                <div class="relative aspect-[2/3] rounded-lg overflow-hidden mb-3 bg-gray-200 dark:bg-gray-800 shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:shadow-primary/20">
+                  <img alt="{{ item.title }}" class="w-full h-full object-cover" src="{{ item.posterUrl }}">
+                  <div class="absolute top-2 right-2 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">HD</div>
+                  <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div class="bg-white/20 backdrop-blur rounded-full p-3 text-white">
+                      <span class="material-symbols-outlined text-2xl">play_arrow</span>
+                    </div>
+                  </div>
+                </div>
+                <h3 class="font-medium text-sm text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">{{ item.title }}</h3>
+                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 gap-2">
+                  <span>{{ item.airedYear }}</span>
+                  <span class="w-1 h-1 bg-gray-500 rounded-full"></span>
+                  <span>{{ item.type | capitalize }}</span>
+                </div>
+              </a>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Local Storage logic for "Add to list" button
+function updateListStatus(status, slug) {
+    const buttonText = document.getElementById('current-list-status-' + slug);
+    const storageKey = 'quravel_list_status_' + slug;
+    
+    if (status === 'Add to list') {
+        buttonText.innerText = 'Add to list';
+        localStorage.removeItem(storageKey);
+    } else {
+        buttonText.innerText = status;
+        localStorage.setItem(storageKey, status);
+    }
+}
+
+// Initialize list status from local storage
+document.addEventListener('DOMContentLoaded', function() {
+    const slug = '{{ show.slug }}';
+    const buttonText = document.getElementById('current-list-status-' + slug);
+    const storageKey = 'quravel_list_status_' + slug;
+    const savedStatus = localStorage.getItem(storageKey);
+    
+    if (savedStatus) {
+        if(savedStatus === 'Add to list') {
+            buttonText.innerText = 'Add to list';
+        } else {
+            buttonText.innerText = savedStatus;
+        }
+    }
+});
+
+// Scroll Logic for "You may like this"
+function scrollContainer(direction) {
+    const container = document.getElementById('recommendations-container');
+    const scrollAmount = 300;
+    if (direction === 'left') {
+        container.scrollLeft -= scrollAmount;
+    } else {
+        container.scrollLeft += scrollAmount;
+    }
+}
+
+// Make searchData available for search functionality
+window.allSearchData = [
+  {% for item in collections.all %}
+  {
+    img: "{{ item.data.posterUrl }}",
+    title: "{{ item.data.title | escape }}",
+    year: "{{ item.data.airedYear }}",
+    type: "{{ item.data.type }}",
+    genre: "{{ item.data.genres[0] | default: item.data.category | escape }}",
+    slug: "{{ item.data.slug }}",
+    searchableTitle: "{{ item.data.searchableTitle | default: item.data.title | escape }}"
+  }{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+];
+</script>

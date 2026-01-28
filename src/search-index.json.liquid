@@ -1,0 +1,117 @@
+---
+layout: null
+permalink: /search-index.json
+---
+
+{% comment %}
+  This is a COMBINED search index that serves both purposes:
+  1. Lightweight data for search suggestions (minimal fields)
+  2. Complete data for full search page
+  We output different data based on query parameter 'mode'
+{% endcomment %}
+
+{% comment %} Get query parameters if any {% endcomment %}
+{% assign mode = eleventy.serverless.query.mode | default: 'lite' %}
+
+{% comment %} LITE MODE: Minimal data for dropdown suggestions (FAST LOADING) {% endcomment %}
+{% if mode == 'lite' %}
+{
+  "version": "lite-1.0",
+  "timestamp": "{{ "now" | date: "%Y-%m-%d %H:%M:%S" }}",
+  "posts": [
+    {% for post in posts %}
+    {
+      "id": "{{ post.id }}",
+      "slug": "{{ post.slug }}",
+      "title": "{{ post.title | escape }}",
+      "searchableTitle": "{{ post.searchableTitle | default: post.title | escape }}",
+      "airedYear": {{ post.airedYear }},
+      "type": "{{ post.type }}",
+      "posterUrl": "{{ post.posterUrl }}",
+      "genres": {{ post.genres | slice: 0, 2 | json }},
+      "rating": {{ post.rating | default: 0 }},
+      "imbdScore": {{ post.imbdScore | default: post.rating }},
+      "url": "/{{ post.type | downcase }}/{{ post.slug }}/",
+      "searchIndex": "{{ post.title }} {{ post.originalTitle | default: '' }} {{ post.japaneseTitle | default: '' }} {{ post.synonyms | join: ' ' | default: '' }} {{ post.genres | join: ' ' }}".toLowerCase()
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ],
+  "total": {{ posts.size }},
+  "mode": "lite"
+}
+{% comment %} FULL MODE: Complete data for search page {% endcomment %}
+{% elsif mode == 'full' %}
+{
+  "version": "full-1.0",
+  "timestamp": "{{ "now" | date: "%Y-%m-%d %H:%M:%S" }}",
+  "posts": [
+    {% for post in posts %}
+    {
+      "id": "{{ post.id }}",
+      "slug": "{{ post.slug }}",
+      "title": "{{ post.title | escape }}",
+      "originalTitle": "{{ post.originalTitle | default: '' | escape }}",
+      "japaneseTitle": "{{ post.japaneseTitle | default: '' | escape }}",
+      "synonyms": {{ post.synonyms | json }},
+      "searchableTitle": "{{ post.searchableTitle | default: post.title | escape }}",
+      "airedYear": {{ post.airedYear }},
+      "type": "{{ post.type }}",
+      "featured": {{ post.featured | default: false }},
+      "rating": {{ post.rating | default: 0 }},
+      "imbdScore": {{ post.imbdScore | default: post.rating }},
+      "popularity": {{ post.popularity | default: 0 }},
+      "category": "{{ post.category | default: '' }}",
+      "premiered": "{{ post.premiered | default: '' }}",
+      "duration": "{{ post.duration }}",
+      "status": "{{ post.status | default: '' }}",
+      "description": "{{ post.description | escape }}",
+      "posterUrl": "{{ post.posterUrl }}",
+      "backdropUrl": "{{ post.backdropUrl | default: post.posterUrl }}",
+      "genres": {{ post.genres | json }},
+      "cast": {{ post.cast | default: [] | json }},
+      "certification": "{{ post.certification | default: '' }}",
+      "country": "{{ post.country | default: '' }}",
+      "studio": "{{ post.studio | default: '' }}",
+      "producers": {{ post.producers | default: [] | json }},
+      "seasonsCount": {{ post.seasons | size | default: 0 }},
+      "url": "/{{ post.type | downcase }}/{{ post.slug }}/",
+      "searchData": "{{ post.title }} {{ post.originalTitle | default: '' }} {{ post.japaneseTitle | default: '' }} {{ post.synonyms | join: ' ' | default: '' }} {{ post.genres | join: ' ' }} {{ post.cast | join: ' ' | default: '' }} {{ post.studio | default: '' }} {{ post.country | default: '' }} {{ post.category | default: '' }}".toLowerCase()
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ],
+  "total": {{ posts.size }},
+  "mode": "full"
+}
+{% comment %} DEFAULT MODE: Smart mode - returns lite, but with ability to fetch full later {% endcomment %}
+{% else %}
+{
+  "version": "smart-1.0",
+  "timestamp": "{{ "now" | date: "%Y-%m-%d %H:%M:%S" }}",
+  "posts": [
+    {% for post in posts %}
+    {
+      "id": "{{ post.id }}",
+      "slug": "{{ post.slug }}",
+      "title": "{{ post.title | escape }}",
+      "searchableTitle": "{{ post.searchableTitle | default: post.title | escape }}",
+      "airedYear": {{ post.airedYear }},
+      "type": "{{ post.type }}",
+      "posterUrl": "{{ post.posterUrl }}",
+      "genres": {{ post.genres | slice: 0, 2 | json }},
+      "rating": {{ post.rating | default: 0 }},
+      "imbdScore": {{ post.imbdScore | default: post.rating }},
+      "popularity": {{ post.popularity | default: 0 }},
+      "duration": "{{ post.duration }}",
+      "status": "{{ post.status | default: '' }}",
+      "url": "/{{ post.type | downcase }}/{{ post.slug }}/",
+      "fullUrl": "/search-index.json?id={{ post.id }}&mode=item",
+      "searchIndex": "{{ post.title }} {{ post.originalTitle | default: '' }} {{ post.japaneseTitle | default: '' }} {{ post.synonyms | join: ' ' | default: '' }} {{ post.genres | join: ' ' }}".toLowerCase()
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ],
+  "total": {{ posts.size }},
+  "mode": "smart",
+  "fullDataUrl": "/search-index.json?mode=full",
+  "liteDataUrl": "/search-index.json?mode=lite"
+}
+{% endif %}

@@ -1,0 +1,590 @@
+---
+layout: layout.liquid
+title: Search Results
+permalink: /search/
+---
+
+<main class="flex-grow pt-24 pb-12 w-full max-w-[1920px] mx-auto min-h-screen">
+  <div class="container mx-auto px-4 lg:px-6">
+    <!-- Search Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <div>
+        {% assign query = eleventy.serverless.query.q %}
+        {% if query and query != "" %}
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            Search Results for <span class="text-primary">"{{ query }}"</span>
+          </h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2" id="search-count">
+            Loading results...
+          </p>
+        {% else %}
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            Search Movies, TV Shows & Anime
+          </h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Enter keywords to find your favorite content
+          </p>
+        {% endif %}
+      </div>
+      
+      <!-- Filters and View Toggle -->
+      <div class="flex items-center gap-3">
+        <select id="sort-select" class="bg-gray-100 dark:bg-[#151926] border-none text-sm rounded-lg py-2 px-3 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-primary cursor-pointer">
+          <option value="relevance">Relevance</option>
+          <option value="latest">Latest</option>
+          <option value="oldest">Oldest</option>
+          <option value="rating">Top Rated</option>
+          <option value="popularity">Most Popular</option>
+        </select>
+        <div class="flex bg-gray-100 dark:bg-[#151926] rounded-lg p-1">
+          <button id="grid-view" class="p-1.5 rounded bg-white dark:bg-gray-700 shadow-sm text-primary">
+            <span class="material-symbols-outlined text-lg">grid_view</span>
+          </button>
+          <button id="list-view" class="p-1.5 rounded hover:text-primary text-gray-500 dark:text-gray-400 transition-colors">
+            <span class="material-symbols-outlined text-lg">view_list</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Search Results Container -->
+    <div id="search-results-container">
+      {% if query and query != "" %}
+        <!-- Loading State -->
+        <div class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          <p class="mt-4 text-gray-600 dark:text-gray-400">Searching for "{{ query }}"...</p>
+        </div>
+      {% else %}
+        <!-- Initial State -->
+        <div class="text-center py-12">
+          <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-700 mb-4">search</span>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">What are you looking for?</h2>
+          <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
+            Search by title, genre, actor, year, studio, or any keyword.
+          </p>
+          
+          <!-- Popular Searches -->
+          <div class="max-w-2xl mx-auto mt-8">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Popular Searches</h3>
+            <div class="flex flex-wrap gap-3 justify-center">
+              {% assign popular_searches = "Action,2024,Anime,Marvel,Comedy,Netflix,Horror,Romance,Sci-Fi,Drama" | split: "," %}
+              {% for term in popular_searches %}
+                <a href="/search/?q={{ term | url_encode }}" class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-sm hover:bg-primary hover:text-white transition-colors">
+                  {{ term }}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+    
+    <!-- Pagination (Initially Hidden) -->
+    <div id="pagination-container" class="mt-12 hidden flex justify-center">
+      <nav class="flex items-center gap-2">
+        <button id="prev-page" class="px-3 py-2 rounded-lg bg-white dark:bg-[#151926] border border-gray-200 dark:border-gray-800 text-gray-500 hover:text-primary disabled:opacity-50 transition-colors">
+          <span class="material-symbols-outlined text-sm">chevron_left</span>
+        </button>
+        <div id="page-numbers" class="flex items-center gap-1">
+          <!-- Page numbers will be generated here -->
+        </div>
+        <button id="next-page" class="px-3 py-2 rounded-lg bg-white dark:bg-[#151926] border border-gray-200 dark:border-gray-800 text-gray-500 hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-sm">chevron_right</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+</main>
+
+<script>
+// Search functionality for search page
+document.addEventListener('DOMContentLoaded', function() {
+  // Get query from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const query = urlParams.get('q');
+  const page = parseInt(urlParams.get('page')) || 1;
+  
+  // State
+  let currentPage = page;
+  let totalResults = 0;
+  let totalPages = 0;
+  let allResults = [];
+  let currentView = 'grid'; // 'grid' or 'list'
+  let currentSort = 'relevance'; // 'relevance', 'latest', 'oldest', 'rating', 'popularity'
+  
+  // Elements
+  const searchCount = document.getElementById('search-count');
+  const resultsContainer = document.getElementById('search-results-container');
+  const paginationContainer = document.getElementById('pagination-container');
+  const pageNumbers = document.getElementById('page-numbers');
+  const prevButton = document.getElementById('prev-page');
+  const nextButton = document.getElementById('next-page');
+  const sortSelect = document.getElementById('sort-select');
+  const gridViewBtn = document.getElementById('grid-view');
+  const listViewBtn = document.getElementById('list-view');
+  
+  // Initialize
+  if (query && query.trim() !== '') {
+    performSearch(query);
+  } else {
+    // Show initial state
+    resultsContainer.innerHTML = `
+      <div class="text-center py-12">
+        <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-700 mb-4">search</span>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">What are you looking for?</h2>
+        <p class="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-6">
+          Search by title, genre, actor, year, studio, or any keyword.
+        </p>
+        <div class="max-w-2xl mx-auto mt-8">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Popular Searches</h3>
+          <div class="flex flex-wrap gap-3 justify-center">
+            ${['Action', '2024', 'Anime', 'Marvel', 'Comedy', 'Netflix', 'Horror', 'Romance', 'Sci-Fi', 'Drama']
+              .map(term => `<a href="/search/?q=${encodeURIComponent(term)}" class="px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-sm hover:bg-primary hover:text-white transition-colors">${term}</a>`)
+              .join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Setup event listeners
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      currentSort = this.value;
+      sortResults();
+      renderResults();
+    });
+  }
+  
+  if (gridViewBtn) {
+    gridViewBtn.addEventListener('click', function() {
+      currentView = 'grid';
+      updateViewButtons();
+      renderResults();
+    });
+  }
+  
+  if (listViewBtn) {
+    listViewBtn.addEventListener('click', function() {
+      currentView = 'list';
+      updateViewButtons();
+      renderResults();
+    });
+  }
+  
+  // Pagination
+  if (prevButton) {
+    prevButton.addEventListener('click', function() {
+      if (currentPage > 1) {
+        currentPage--;
+        updateURL();
+        renderResults();
+      }
+    });
+  }
+  
+  if (nextButton) {
+    nextButton.addEventListener('click', function() {
+      if (currentPage < totalPages) {
+        currentPage++;
+        updateURL();
+        renderResults();
+      }
+    });
+  }
+  
+  // Functions
+  async function performSearch(searchQuery) {
+    try {
+      // Load search data from posts.json
+      const response = await fetch('/api/posts.json');
+      const searchData = await response.json();
+      
+      // Filter results
+      allResults = filterResults(searchQuery, searchData);
+      totalResults = allResults.length;
+      
+      // Update count
+      if (searchCount) {
+        searchCount.textContent = `Found ${totalResults} result${totalResults !== 1 ? 's' : ''}`;
+      }
+      
+      // Sort and render
+      sortResults();
+      renderResults();
+      
+    } catch (error) {
+      console.error('Error performing search:', error);
+      showErrorState();
+    }
+  }
+  
+  function filterResults(query, searchData) {
+    if (!query) return [];
+    
+    const searchTerm = query.toLowerCase().trim();
+    const results = [];
+    
+    // Convert posts.json data to searchable format
+    const shows = Array.isArray(searchData) ? searchData : 
+                  searchData.posts || searchData.shows || 
+                  (searchData.data && Array.isArray(searchData.data) ? searchData.data : []);
+    
+    shows.forEach(item => {
+      const searchFields = `
+        ${item.title || ''}
+        ${item.originalTitle || ''}
+        ${item.japaneseTitle || ''}
+        ${item.synonyms ? (Array.isArray(item.synonyms) ? item.synonyms.join(' ') : item.synonyms) : ''}
+        ${item.genres ? (Array.isArray(item.genres) ? item.genres.join(' ') : item.genres) : ''}
+        ${item.cast ? (Array.isArray(item.cast) ? item.cast.join(' ') : item.cast) : ''}
+        ${item.studio || ''}
+        ${item.producers ? (Array.isArray(item.producers) ? item.producers.join(' ') : item.producers) : ''}
+        ${item.country || ''}
+        ${item.description || ''}
+        ${item.type || ''}
+        ${item.category || ''}
+      `.toLowerCase();
+      
+      if (searchFields.includes(searchTerm) || 
+          (item.title && item.title.toLowerCase().includes(searchTerm))) {
+        results.push(item);
+      }
+    });
+    
+    return results;
+  }
+  
+  function sortResults() {
+    switch(currentSort) {
+      case 'latest':
+        allResults.sort((a, b) => {
+          const yearA = parseInt(a.airedYear || a.aired?.split('-')[0] || 0);
+          const yearB = parseInt(b.airedYear || b.aired?.split('-')[0] || 0);
+          return yearB - yearA;
+        });
+        break;
+      case 'oldest':
+        allResults.sort((a, b) => {
+          const yearA = parseInt(a.airedYear || a.aired?.split('-')[0] || 9999);
+          const yearB = parseInt(b.airedYear || b.aired?.split('-')[0] || 9999);
+          return yearA - yearB;
+        });
+        break;
+      case 'rating':
+        allResults.sort((a, b) => {
+          const ratingA = parseFloat(a.imbdScore || a.rating || a.score || 0);
+          const ratingB = parseFloat(b.imbdScore || b.rating || b.score || 0);
+          return ratingB - ratingA;
+        });
+        break;
+      case 'popularity':
+        allResults.sort((a, b) => {
+          const popA = parseInt(a.popularity || 0);
+          const popB = parseInt(b.popularity || 0);
+          return popB - popA;
+        });
+        break;
+      case 'relevance':
+      default:
+        // Keep original order (already filtered by relevance)
+        break;
+    }
+  }
+  
+  function renderResults() {
+    if (allResults.length === 0) {
+      showNoResultsState();
+      paginationContainer.classList.add('hidden');
+      return;
+    }
+    
+    // Calculate pagination
+    const itemsPerPage = 20;
+    totalPages = Math.ceil(totalResults / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalResults);
+    const currentResults = allResults.slice(startIndex, endIndex);
+    
+    // Render results
+    let html = '';
+    
+    if (currentView === 'grid') {
+      html = renderGridView(currentResults);
+    } else {
+      html = renderListView(currentResults);
+    }
+    
+    resultsContainer.innerHTML = html;
+    
+    // Update pagination
+    updatePagination();
+    paginationContainer.classList.remove('hidden');
+  }
+  
+  function renderGridView(results) {
+    return `
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
+        ${results.map(item => {
+          // Get show details page URL
+          const showType = (item.type || 'show').toLowerCase();
+          const showSlug = item.slug || item.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-');
+          const showUrl = `/${showType}/${showSlug}/`;
+          
+          // Get poster URL
+          const posterUrl = item.posterurl || item.posterUrl || item.poster || '/images/default-poster.jpg';
+          
+          // Get year
+          const year = item.airedYear || (item.aired ? item.aired.split('-')[0] : 'N/A');
+          
+          // Get rating
+          const rating = item.imbdScore || item.rating || item.score;
+          
+          // Get type display name
+          let typeDisplay = 'Show';
+          if (item.type === 'series') typeDisplay = 'TV Show';
+          else if (item.type === 'anime') typeDisplay = 'Anime';
+          else if (item.type === 'movie') typeDisplay = 'Movie';
+          
+          return `
+          <a class="group relative block" href="${showUrl}">
+            <div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-gray-200 dark:bg-surface-dark shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:scale-[1.02] group-hover:-translate-y-1">
+              <img 
+                alt="${item.title || 'Show'}" 
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                src="${posterUrl}"
+                loading="lazy"
+                onerror="this.src='/images/default-poster.jpg'"
+              />
+              <div class="absolute top-2 right-2 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm">HD</div>
+              ${rating ? `
+                <div class="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                  <span class="material-symbols-outlined text-[10px] filled text-yellow-400">star</span> 
+                  ${rating}
+                </div>
+              ` : ''}
+              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-5xl drop-shadow-lg scale-75 group-hover:scale-100 transition-transform duration-300">play_circle</span>
+              </div>
+            </div>
+            <div class="mt-3">
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">${item.title || 'Untitled'}</h3>
+              <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <span>${year}</span>
+                <span class="w-1 h-1 bg-gray-500 rounded-full"></span>
+                <span>${typeDisplay}</span>
+                ${item.duration ? `
+                  <span class="w-1 h-1 bg-gray-500 rounded-full"></span>
+                  <span>${item.duration}</span>
+                ` : ''}
+              </div>
+            </div>
+          </a>
+        `;
+        }).join('')}
+      </div>
+    `;
+  }
+  
+  function renderListView(results) {
+    return `
+      <div class="space-y-4">
+        ${results.map(item => {
+          // Get show details page URL
+          const showType = (item.type || 'show').toLowerCase();
+          const showSlug = item.slug || item.title.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-');
+          const showUrl = `/${showType}/${showSlug}/`;
+          
+          // Get poster URL
+          const posterUrl = item.posterurl || item.posterUrl || item.poster || '/images/default-poster.jpg';
+          
+          // Get year
+          const year = item.airedYear || (item.aired ? item.aired.split('-')[0] : 'N/A');
+          
+          // Get rating
+          const rating = item.imbdScore || item.rating || item.score;
+          
+          // Get type display name
+          let typeDisplay = 'Show';
+          if (item.type === 'series') typeDisplay = 'TV Show';
+          else if (item.type === 'anime') typeDisplay = 'Anime';
+          else if (item.type === 'movie') typeDisplay = 'Movie';
+          
+          // Get genres
+          const genres = Array.isArray(item.genres) ? item.genres.slice(0, 2).join(', ') : (item.genres || '');
+          
+          return `
+          <a href="${showUrl}" class="group flex items-start gap-4 p-4 bg-white dark:bg-[#151926] rounded-xl hover:shadow-lg transition-all duration-300">
+            <div class="relative flex-shrink-0 w-20 md:w-24 aspect-[2/3] rounded-lg overflow-hidden">
+              <img 
+                alt="${item.title || 'Show'}" 
+                class="w-full h-full object-cover" 
+                src="${posterUrl}"
+                loading="lazy"
+                onerror="this.src='/images/default-poster.jpg'"
+              />
+              <div class="absolute top-1 right-1 bg-primary text-white text-[8px] font-bold px-1 py-0.5 rounded">HD</div>
+              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-2xl">play_arrow</span>
+              </div>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors mb-2">${item.title || 'Untitled'}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">${item.description || ''}</p>
+              <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">calendar_today</span>
+                  ${year}
+                </span>
+                <span class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">category</span>
+                  ${typeDisplay}
+                </span>
+                ${rating ? `
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm filled text-yellow-500">star</span>
+                    ${rating}
+                  </span>
+                ` : ''}
+                ${genres ? `
+                  <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">sell</span>
+                    ${genres}
+                  </span>
+                ` : ''}
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">chevron_right</span>
+          </a>
+        `;
+        }).join('')}
+      </div>
+    `;
+  }
+  
+  function updatePagination() {
+    // Update page numbers
+    let pagesHtml = '';
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    // First page
+    if (startPage > 1) {
+      pagesHtml += `
+        <button class="page-number px-3.5 py-2 rounded-lg bg-white dark:bg-[#151926] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium text-sm transition-colors" data-page="1">1</button>
+        ${startPage > 2 ? '<span class="text-gray-400 px-2">...</span>' : ''}
+      `;
+    }
+    
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      pagesHtml += `
+        <button class="page-number px-3.5 py-2 rounded-lg ${i === currentPage ? 'bg-primary text-white' : 'bg-white dark:bg-[#151926] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'} font-medium text-sm transition-colors" data-page="${i}">${i}</button>
+      `;
+    }
+    
+    // Last page
+    if (endPage < totalPages) {
+      pagesHtml += `
+        ${endPage < totalPages - 1 ? '<span class="text-gray-400 px-2">...</span>' : ''}
+        <button class="page-number px-3.5 py-2 rounded-lg bg-white dark:bg-[#151926] border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium text-sm transition-colors" data-page="${totalPages}">${totalPages}</button>
+      `;
+    }
+    
+    pageNumbers.innerHTML = pagesHtml;
+    
+    // Update button states
+    prevButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage === totalPages;
+    
+    // Add event listeners to page numbers
+    document.querySelectorAll('.page-number').forEach(button => {
+      button.addEventListener('click', function() {
+        currentPage = parseInt(this.dataset.page);
+        updateURL();
+        renderResults();
+      });
+    });
+  }
+  
+  function updateViewButtons() {
+    if (currentView === 'grid') {
+      gridViewBtn.classList.add('bg-white', 'dark:bg-gray-700', 'shadow-sm', 'text-primary');
+      gridViewBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+      listViewBtn.classList.remove('bg-white', 'dark:bg-gray-700', 'shadow-sm', 'text-primary');
+      listViewBtn.classList.add('text-gray-500', 'dark:text-gray-400');
+    } else {
+      listViewBtn.classList.add('bg-white', 'dark:bg-gray-700', 'shadow-sm', 'text-primary');
+      listViewBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+      gridViewBtn.classList.remove('bg-white', 'dark:bg-gray-700', 'shadow-sm', 'text-primary');
+      gridViewBtn.classList.add('text-gray-500', 'dark:text-gray-400');
+    }
+  }
+  
+  function updateURL() {
+    const url = new URL(window.location);
+    url.searchParams.set('page', currentPage);
+    window.history.pushState({}, '', url);
+  }
+  
+  function showNoResultsState() {
+    resultsContainer.innerHTML = `
+      <div class="text-center py-12">
+        <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-700 mb-4">search_off</span>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">No Results Found</h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">
+          No results found for <span class="font-semibold text-primary">"${query}"</span>
+        </p>
+        <p class="text-gray-500 dark:text-gray-500 text-sm mb-6">
+          Try different keywords or check the spelling.
+        </p>
+        <div class="flex flex-wrap gap-3 justify-center">
+          <a href="/" class="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors">
+            <span class="material-symbols-outlined text-sm">home</span>
+            Back to Home
+          </a>
+          <button onclick="window.location.href='/search/'" class="inline-flex items-center gap-2 bg-primary hover:bg-opacity-90 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+            <span class="material-symbols-outlined text-sm">search</span>
+            Search Again
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  
+  function showErrorState() {
+    resultsContainer.innerHTML = `
+      <div class="text-center py-12">
+        <span class="material-symbols-outlined text-6xl text-red-500 mb-4">error</span>
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Results</h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">Please try again later.</p>
+        <div class="flex gap-3 justify-center">
+          <button onclick="window.location.reload()" class="inline-flex items-center gap-2 bg-primary hover:bg-opacity-90 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+            <span class="material-symbols-outlined text-sm">refresh</span>
+            Try Again
+          </button>
+          <a href="/" class="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors">
+            Go to Home
+          </a>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Handle browser back/forward buttons
+  window.addEventListener('popstate', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const newPage = parseInt(urlParams.get('page')) || 1;
+    if (newPage !== currentPage) {
+      currentPage = newPage;
+      renderResults();
+    }
+  });
+});
+</script>
