@@ -1,21 +1,44 @@
 {
-  "name": "quravel",
+  "name": "quravel-streaming",
   "version": "1.0.0",
-  "description": "Streaming platform for movies, TV shows, and anime - Built with 11ty",
+  "description": "Streaming platform for movies, TV shows, and anime - Built with 11ty and deployed to GitHub Pages",
   "main": ".eleventy.js",
   "scripts": {
     "start": "npx @11ty/eleventy --serve",
     "build": "npx @11ty/eleventy",
     "dev": "npx @11ty/eleventy --serve --watch",
     "clean": "rm -rf _site",
+    "clean:all": "rm -rf _site .cache .eleventy-cache node_modules package-lock.json",
     "build:prod": "npm run clean && NODE_ENV=production npx @11ty/eleventy",
+    
+    // GitHub Pages specific scripts
+    "build:gh-pages": "npm run clean && NODE_ENV=production ELEVENTY_ENV=production npx @11ty/eleventy --pathprefix=/testme/",
+    "build:local-test": "npm run clean && npx @11ty/eleventy --pathprefix=/testme/",
+    "preview:gh-pages": "npm run build:gh-pages && npx serve _site",
+    "preview:local": "npm run build:local-test && npx serve _site",
+    
+    // Manual deployment scripts
+    "deploy:manual": "npm run build:gh-pages && npx gh-pages -d _site -b gh-pages",
+    "deploy:force": "npm run build:gh-pages && npx gh-pages -d _site -b gh-pages --force",
+    
+    // Testing and debugging
     "debug": "DEBUG=Eleventy* npx @11ty/eleventy",
-    "vercel-build": "npm run build:prod",
-    "vercel-dev": "npm run dev",
-    "netlify-build": "npm run build:prod",
-    "netlify-dev": "npm run dev",
-    "preview": "npm run build:prod && npx serve _site",
-    "test": "echo \"No tests specified\" && exit 0"
+    "debug:build": "DEBUG=Eleventy* npm run build:gh-pages",
+    "test": "echo \"Running tests...\" && npm run build:gh-pages && echo \"✅ Build successful\"",
+    "test:links": "npm run build:gh-pages && npx html-validate _site",
+    
+    // Development utilities
+    "assets:optimize": "node scripts/optimize-images.js",
+    "lint": "npx prettier --check .",
+    "lint:fix": "npx prettier --write .",
+    
+    // Environment specific builds
+    "build:development": "npm run clean && NODE_ENV=development npx @11ty/eleventy",
+    "build:staging": "npm run clean && NODE_ENV=staging npx @11ty/eleventy --pathprefix=/testme/",
+    
+    // Quick server for testing
+    "serve": "npx serve _site",
+    "serve:prod": "npm run build:gh-pages && npx serve _site"
   },
   "keywords": [
     "streaming",
@@ -24,10 +47,23 @@
     "tv-shows",
     "11ty",
     "static-site",
+    "github-pages",
     "quravel"
   ],
   "author": "Quravel",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/testme.git"
+  },
+  "homepage": "https://YOUR_USERNAME.github.io/testme/",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/testme/issues"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/YOUR_USERNAME"
+  },
   "dependencies": {
     "@11ty/eleventy": "^2.0.1",
     "luxon": "^3.4.4"
@@ -35,28 +71,47 @@
   "devDependencies": {
     "@11ty/eleventy-img": "^3.1.0",
     "@11ty/eleventy-navigation": "^0.3.5",
-    "dotenv": "^16.3.1"
+    "autoprefixer": "^10.4.19",
+    "cssnano": "^6.1.0",
+    "dotenv": "^16.3.1",
+    "gh-pages": "^6.1.1",
+    "html-validate": "^8.3.0",
+    "postcss": "^8.4.38",
+    "prettier": "^3.2.5",
+    "sharp": "^0.33.2",
+    "tailwindcss": "^3.4.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "browserslist": [
-    "defaults"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://bitbucket.org/yourusername/quravel.git"
-  },
-  "homepage": "https://quravel.vercel.app",
-  "funding": {
-    "type": "individual",
-    "url": "https://quravel.com/donate"
-  },
-  "cacheDirectories": [
-    "node_modules",
-    ".cache"
+    "defaults",
+    "not IE 11",
+    "maintained node versions"
   ],
   "volta": {
     "node": "18.20.0"
-  }
+  },
+  "cacheDirectories": [
+    "node_modules",
+    ".cache",
+    ".eleventy-cache"
+  ],
+  "config": {
+    "repo-name": "testme",
+    "github-username": "YOUR_USERNAME",
+    "site-url": "https://YOUR_USERNAME.github.io/testme/"
+  },
+  "eleventy": {
+    "directory": {
+      "input": "src",
+      "output": "_site",
+      "includes": "_includes",
+      "layouts": "_includes",
+      "data": "_data"
+    }
+  },
+  "type": "module",
+  "sideEffects": false
 }
