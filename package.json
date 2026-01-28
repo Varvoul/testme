@@ -10,33 +10,21 @@
     "clean": "rm -rf _site",
     "clean:all": "rm -rf _site .cache .eleventy-cache node_modules package-lock.json",
     "build:prod": "npm run clean && NODE_ENV=production npx @11ty/eleventy",
-    
-    // GitHub Pages specific scripts
     "build:gh-pages": "npm run clean && NODE_ENV=production ELEVENTY_ENV=production npx @11ty/eleventy --pathprefix=/testme/",
     "build:local-test": "npm run clean && npx @11ty/eleventy --pathprefix=/testme/",
     "preview:gh-pages": "npm run build:gh-pages && npx serve _site",
     "preview:local": "npm run build:local-test && npx serve _site",
-    
-    // Manual deployment scripts
     "deploy:manual": "npm run build:gh-pages && npx gh-pages -d _site -b gh-pages",
     "deploy:force": "npm run build:gh-pages && npx gh-pages -d _site -b gh-pages --force",
-    
-    // Testing and debugging
     "debug": "DEBUG=Eleventy* npx @11ty/eleventy",
     "debug:build": "DEBUG=Eleventy* npm run build:gh-pages",
     "test": "echo \"Running tests...\" && npm run build:gh-pages && echo \"✅ Build successful\"",
     "test:links": "npm run build:gh-pages && npx html-validate _site",
-    
-    // Development utilities
     "assets:optimize": "node scripts/optimize-images.js",
     "lint": "npx prettier --check .",
     "lint:fix": "npx prettier --write .",
-    
-    // Environment specific builds
     "build:development": "npm run clean && NODE_ENV=development npx @11ty/eleventy",
     "build:staging": "npm run clean && NODE_ENV=staging npx @11ty/eleventy --pathprefix=/testme/",
-    
-    // Quick server for testing
     "serve": "npx serve _site",
     "serve:prod": "npm run build:gh-pages && npx serve _site"
   },
