@@ -1,0 +1,95 @@
+# ============================================
+# DEPENDENCIES
+# ============================================
+node_modules
+.npm
+.pnpm
+.yarn
+
+# ============================================
+# SOURCE CODE (Don't deploy these)
+# ============================================
+src/
+.eleventy.js
+package.json
+package-lock.json
+yarn.lock
+
+# ============================================
+# GIT & VERSION CONTROL
+# ============================================
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# ============================================
+# DEVELOPMENT & BUILD FILES
+# ============================================
+.eleventy-cache
+.cache
+.tmp
+*.bak
+*.tmp
+*.temp
+
+# ============================================
+# LOCAL CONFIGURATION
+# ============================================
+.env
+.env.local
+.env.*.local
+.local-*
+
+# ============================================
+# TESTING & DOCUMENTATION
+# ============================================
+test/
+tests/
+__tests__/
+spec/
+__spec__/
+coverage/
+.nyc_output
+*.md
+*.txt
+LICENSE
+CHANGELOG
+CONTRIBUTING
+
+# ============================================
+# IDE & EDITOR
+# ============================================
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# ============================================
+# OPERATING SYSTEM
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================
+# LOGS
+# ============================================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================
+# BITBUCKET
+# ============================================
+bitbucket-pipelines.yml
+
+# ============================================
+# ONLY DEPLOY THE BUILT SITE
+# ============================================
+!**/*
+!package.json          # Keep for Vercel to read
+!_site/**/*            # ONLY deploy the _site folder

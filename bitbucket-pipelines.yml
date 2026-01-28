@@ -1,0 +1,24 @@
+image: node:22-alpine # Using 2026 LTS version
+
+pipelines:
+  default:
+    - step:
+        name: 🏗️ Build Site
+        caches:
+          - node
+        script:
+          - npm install
+          - npm run build
+          - echo "✅ Build successful!"
+        artifacts:
+          - _site/** # Save the build output for the deploy step
+
+  branches:
+    main:
+      - step:
+          name: 🚀 Deploy to Netlify
+          deployment: production
+          script:
+            - npm install -g netlify-cli # Install the dependency
+            - netlify deploy --dir=_site --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+            - echo "✅ Deployed to Netlify!"
