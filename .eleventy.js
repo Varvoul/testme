@@ -201,11 +201,11 @@ module.exports = function(eleventyConfig) {
     return new Date().getFullYear();
   });
 
-  // Card component
+  // Card component - FIXED FOR GITHUB PAGES
   eleventyConfig.addShortcode("card", function(show) {
     return `
       <div class="card">
-        <a href="/${show.type}/${show.slug}/">
+        <a href="{{ '/' | url }}${show.type}/${show.slug}/">
           <img src="${show.posterUrl}" alt="${show.title}" loading="lazy">
           <h3>${show.title}</h3>
           <p>${show.airedYear} • ${show.type}</p>
@@ -252,6 +252,18 @@ module.exports = function(eleventyConfig) {
   });
 
   // ============================================
+  // CREATE .nojekyll FOR GITHUB PAGES
+  // ============================================
+  eleventyConfig.on('eleventy.after', () => {
+    const fs = require('fs');
+    const nojekyllPath = '_site/.nojekyll';
+    if (!fs.existsSync(nojekyllPath)) {
+      fs.writeFileSync(nojekyllPath, '');
+      console.log('✅ Created .nojekyll for GitHub Pages');
+    }
+  });
+
+  // ============================================
   // CONFIGURATION
   // ============================================
   return {
@@ -267,9 +279,6 @@ module.exports = function(eleventyConfig) {
     markdownTemplateEngine: "liquid",
     dataTemplateEngine: "liquid",
     passthroughFileCopy: true,
-    pathPrefix: "/"
+    pathPrefix: "/testme/"
   };
-};
-
- pathPrefix: "/testme/" 
 };
