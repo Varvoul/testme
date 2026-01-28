@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    
+    <title>{{ page_title | default: 'Quravel' }}</title>
+    
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+    <link rel="manifest" href="/assets/site.webmanifest">
+    <link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    
+    <!-- CSS and JavaScript dependencies -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#498BBB", 
+                        "background-light": "#F3F4F6",
+                        "background-dark": "#0B0E19",
+                        "surface-dark": "#151926",
+                        "footer-dark": "#0C0E14",
+                        "text-light": "#E5E7EB",
+                        "text-muted": "#9CA3AF"
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        #mobile-menu {
+            transition: transform 0.3s ease-in-out;
+        }
+        .menu-open {
+            transform: translateX(0) !important;
+        }
+        .carousel-slide {
+            transition: opacity 0.5s ease-in-out;
+            opacity: 0;
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+        .carousel-slide.active {
+            opacity: 1;
+            z-index: 20;
+            position: relative;
+        }
+        .search-results::-webkit-scrollbar {
+            width: 6px;
+        }
+        .search-results::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .search-results::-webkit-scrollbar-thumb {
+            background-color: #4B5563;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-text-light transition-colors duration-300 min-h-screen flex flex-col relative">
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" id="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+    
+    <!-- Mobile Menu -->
+    <div class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-[#151926] z-50 transform -translate-x-full lg:hidden overflow-y-auto shadow-2xl" id="mobile-menu">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <img alt="Quravel Logo" class="h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0IudKLH4eS5tVR8amMwDIbW3Iy_IWpv76-dKfahr1NALGXyfubP2jclUAXJXpFRlp0nVvJGB3ve2NzGhUDU8esiq1rBNaYTAu9L2cbWVvmY2gWt1mQNth2qe-50kgsxWmA78yfsuf6D_4xYMluJq0cESCmxtF1SiCMDaEeidlgvORv3vEECqwxL4ovMc_8A6XpxELvmuERS093FxoHHFoJMH6ziLCgtyOsM8rMKaf_2FojSCx7HwhwVBQOp7t1Zl6HCxIn-DsBYw">
+            <button class="text-gray-500 hover:text-primary" onclick="toggleMobileMenu()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-4 space-y-4">
+            <a class="block text-sm font-medium hover:text-primary py-2 border-b border-gray-100 dark:border-gray-800" href="/">Home</a>
+            <div class="py-2 border-b border-gray-100 dark:border-gray-800">
+                <button class="flex items-center justify-between w-full text-sm font-medium hover:text-primary focus:outline-none" onclick="toggleMobileDropdown('genre-mobile')">
+                    <span>Genre</span>
+                    <span class="material-symbols-outlined text-sm transform transition-transform" id="genre-arrow">expand_more</span>
+                </button>
+                <div class="hidden mt-2 ml-4 space-y-2 text-sm text-gray-500 dark:text-gray-400" id="genre-mobile">
+                    <a class="block hover:text-primary" href="#">Action</a>
+                    <a class="block hover:text-primary" href="#">Adventure</a>
+                    <a class="block hover:text-primary" href="#">Cars</a>
+                    <a class="block hover:text-primary" href="#">Comedy</a>
+                    <a class="block hover:text-primary" href="#">Dementia</a>
+                    <a class="block hover:text-primary" href="#">Demons</a>
+                    <a class="block hover:text-primary" href="#">Drama</a>
+                    <a class="block hover:text-primary" href="#">Ecchi</a>
+                    <a class="block hover:text-primary" href="#">Fantasy</a>
+                    <a class="block hover:text-primary" href="#">Game</a>
+                    <a class="block hover:text-primary" href="#">Harem</a>
+                    <a class="block hover:text-primary" href="#">Historical</a>
+                    <a class="block hover:text-primary" href="#">Horror</a>
+                    <a class="block hover:text-primary" href="#">Isekai</a>
+                    <a class="block hover:text-primary" href="#">Josei</a>
+                    <a class="block hover:text-primary" href="#">Kids</a>
+                    <a class="block hover:text-primary" href="#">Magic</a>
+                    <a class="block hover:text-primary" href="#">Martial Arts</a>
+                    <a class="block hover:text-primary" href="#">Mecha</a>
+                    <a class="block hover:text-primary" href="#">Military</a>
+                    <a class="block hover:text-primary" href="#">Music</a>
+                    <a class="block hover:text-primary" href="#">Mystery</a>
+                    <a class="block hover:text-primary" href="#">Noir</a>
+                    <a class="block hover:text-primary" href="#">Parody</a>
+                    <a class="block hover:text-primary" href="#">Police</a>
+                    <a class="block hover:text-primary" href="#">Psychological</a>
+                    <a class="block hover:text-primary" href="#">Politic</a>
+                    <a class="block hover:text-primary" href="#">Romance</a>
+                    <a class="block hover:text-primary" href="#">Reality-Show</a>
+                    <a class="block hover:text-primary" href="#">Reality-TV</a>
+                    <a class="block hover:text-primary" href="#">Samurai</a>
+                    <a class="block hover:text-primary" href="#">School</a>
+                    <a class="block hover:text-primary" href="#">Sci-Fi</a>
+                    <a class="block hover:text-primary" href="#">Seinen</a>
+                    <a class="block hover:text-primary" href="#">Shoujo</a>
+                    <a class="block hover:text-primary" href="#">Shoujo Ai</a>
+                    <a class="block hover:text-primary" href="#">Shounen</a>
+                    <a class="block hover:text-primary" href="#">Shounen Ai</a>
+                    <a class="block hover:text-primary" href="#">Slice of Life</a>
+                    <a class="block hover:text-primary" href="#">Space</a>
+                    <a class="block hover:text-primary" href="#">Sports</a>
+                    <a class="block hover:text-primary" href="#">Super Power</a>
+                    <a class="block hover:text-primary" href="#">Supernatural</a>
+                    <a class="block hover:text-primary" href="#">Thriller</a>
+                    <a class="block hover:text-primary" href="#">Vampire</a>
+                    <a class="block hover:text-primary" href="#">War</a>
+                </div>
+            </div>
+            <div class="py-2 border-b border-gray-100 dark:border-gray-800">
+                <button class="flex items-center justify-between w-full text-sm font-medium hover:text-primary focus:outline-none" onclick="toggleMobileDropdown('country-mobile')">
+                    <span>Country</span>
+                    <span class="material-symbols-outlined text-sm transform transition-transform" id="country-arrow">expand_more</span>
+                </button>
+                <div class="hidden mt-2 ml-4 space-y-2 text-sm text-gray-500 dark:text-gray-400" id="country-mobile">
+                    <a class="block hover:text-primary" href="#">Argentina</a>
+                    <a class="block hover:text-primary" href="#">Australia</a>
+                    <a class="block hover:text-primary" href="#">Austria</a>
+                    <a class="block hover:text-primary" href="#">Bangladesh</a>
+                    <a class="block hover:text-primary" href="#">Belgium</a>
+                    <a class="block hover:text-primary" href="#">Brazil</a>
+                    <a class="block hover:text-primary" href="#">Canada</a>
+                    <a class="block hover:text-primary" href="#">Chile</a>
+                    <a class="block hover:text-primary" href="#">China</a>
+                    <a class="block hover:text-primary" href="#">Colombia</a>
+                    <a class="block hover:text-primary" href="#">Czechia</a>
+                    <a class="block hover:text-primary" href="#">Denmark</a>
+                    <a class="block hover:text-primary" href="#">Egypt</a>
+                    <a class="block hover:text-primary" href="#">Finland</a>
+                    <a class="block hover:text-primary" href="#">France</a>
+                    <a class="block hover:text-primary" href="#">Germany</a>
+                    <a class="block hover:text-primary" href="#">Greece</a>
+                    <a class="block hover:text-primary" href="#">Hong Kong</a>
+                    <a class="block hover:text-primary" href="#">Hungary</a>
+                    <a class="block hover:text-primary" href="#">Iceland</a>
+                    <a class="block hover:text-primary" href="#">India</a>
+                    <a class="block hover:text-primary" href="#">Indonesia</a>
+                    <a class="block hover:text-primary" href="#">Iran</a>
+                    <a class="block hover:text-primary" href="#">Ireland</a>
+                    <a class="block hover:text-primary" href="#">Israel</a>
+                    <a class="block hover:text-primary" href="#">Italy</a>
+                    <a class="block hover:text-primary" href="#">Japan</a>
+                    <a class="block hover:text-primary" href="#">Mexico</a>
+                    <a class="block hover:text-primary" href="#">Netherlands</a>
+                    <a class="block hover:text-primary" href="#">New Zealand</a>
+                    <a class="block hover:text-primary" href="#">Nigeria</a>
+                    <a class="block hover:text-primary" href="#">Pakistan</a>
+                    <a class="block hover:text-primary" href="#">Philippines</a>
+                    <a class="block hover:text-primary" href="#">Poland</a>
+                    <a class="block hover:text-primary" href="#">Russia</a>
+                    <a class="block hover:text-primary" href="#">South Africa</a>
+                    <a class="block hover:text-primary" href="#">Spain</a>
+                    <a class="block hover:text-primary" href="#">Sweden</a>
+                    <a class="block hover:text-primary" href="#">Taiwan</a>
+                    <a class="block hover:text-primary" href="#">Thailand</a>
+                    <a class="block hover:text-primary" href="#">Turkey</a>
+                    <a class="block hover:text-primary" href="#">UK</a>
+                </div>
+            </div>
+            <a class="block text-sm font-medium hover:text-primary py-2 border-b border-gray-100 dark:border-gray-800" href="#">Top IMDB</a>
+            <a class="block text-sm font-medium hover:text-primary py-2 border-b border-gray-100 dark:border-gray-800" href="https://editor.wix.com/wixel-view/forms/7405900275916997729">Updates</a>
+            <a class="block text-sm font-medium hover:text-primary py-2" href="#">Sent request</a>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-40 bg-white/95 dark:bg-[#0B0E19]/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 shadow-sm">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button class="lg:hidden text-gray-600 dark:text-gray-200 focus:outline-none" onclick="toggleMobileMenu()">
+                    <span class="material-symbols-outlined text-3xl">menu</span>
+                </button>
+                <nav class="hidden lg:flex items-center space-x-6 text-sm font-medium">
+                    <a class="hover:text-primary transition-colors text-primary" href="/">Home</a>
+                    <div class="relative group">
+                        <button class="flex items-center space-x-1 hover:text-primary transition-colors focus:outline-none py-4">
+                            <span>Genre</span>
+                            <span class="material-symbols-outlined text-sm">expand_more</span>
+                        </button>
+                        <div class="absolute top-full left-0 w-[600px] bg-white dark:bg-[#1A1D29] rounded-b-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border-t-2 border-primary grid grid-cols-4 gap-4 p-6 z-50">
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Adventure</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Adult</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Cars</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Comedy</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Dementia</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Demons</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Drama</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Ecchi</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Fantasy</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Game</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Harem</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Historical</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Horror</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Isekai</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Josei</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Kids</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Magic</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Martial Arts</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Mecha</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Military</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Music</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Mystery</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Noir</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Parody</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Police</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Politic</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Psychological</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Romance</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Samurai</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">School</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Sci-Fi</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Seinen</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Shoujo</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Shoujo Ai</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Shounen</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Shounen Ai</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Slice of Life</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Space</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Sports</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Super Power</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Supernatural</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Thriller</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Vampire</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">War</a>
+                        </div>
+                    </div>
+                    <div class="relative group">
+                        <button class="flex items-center space-x-1 hover:text-primary transition-colors focus:outline-none py-4">
+                            <span>Country</span>
+                            <span class="material-symbols-outlined text-sm">expand_more</span>
+                        </button>
+                        <div class="absolute top-full left-0 w-[600px] bg-white dark:bg-[#1A1D29] rounded-b-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border-t-2 border-primary grid grid-cols-4 gap-4 p-6 z-50">
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Argentina</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Australia</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Austria</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Belgium</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Brazil</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Canada</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">China</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Colombia</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Czech Republic</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Denmark</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Finland</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">France</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Germany</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Hong Kong</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Hungary</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">India</a>
+                            <a class="block hover:text-primary text-sm text-gray-600 dark:text-gray-400" href="#">Ireland</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Israel</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Italy</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Japan</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Luxembourg</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Mexico</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Netherlands</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">New Zealand</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Nigeria</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Norway</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Philippines</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Poland</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Romania</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Russia</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">South Africa</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">South Korea</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Spain</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Sweden</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Switzerland</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Taiwan</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Thailand</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">Turkey</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">United Kingdom</a>
+                            <a class="hover:text-primary block text-sm text-gray-600 dark:text-gray-400" href="#">United States</a>
+                        </div>
+                    </div>
+                    <a class="hover:text-primary transition-colors" href="#">Top IMDB</a>
+                    <a class="hover:text-primary transition-colors" href="#">Updates</a>
+                    <a class="hover:text-primary transition-colors" href="https://editor.wix.com/wixel-view/forms/7405900275916997729">Sent request</a>
+                </nav>
+            </div>
+            <div class="absolute left-1/2 transform -translate-x-1/2">
+                <a class="block" href="/">
+                    <img alt="Quravel Logo" class="h-8 md:h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqLjw2b3zIJYAUXSR-0wnqCCSiHxBpWopeX4YkK91UxQUQErP8E3fBTKHGPMn44svm6TkV73RcFl8uZYm6unBNmb_F5B0XAtvw-yAnSKJzR-DIoMzoWA519xKDUhoH8DE4biRu7joxNso-Ui3U1pLkiOaL02GPgdP6zHD6BmF10aMv5toxV6-cghRon9fHKmJihBEYz21Rmh4zx3Kz6pm1xk_o-fcYhwfAxeV0fx3eRLBxYIrLqzBBjdbVn1H1B5RVpSEDH9EgFZ4">
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden sm:block">
+                    <input class="bg-gray-100 dark:bg-gray-800 text-sm rounded-full py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary w-48 transition-all dark:text-white border-none" id="desktop-search-input" oninput="handleSearch(this.value, 'desktop-search-results')" placeholder="Search..." type="text">
+                    <span class="material-symbols-outlined absolute right-3 top-2 text-gray-400 text-lg cursor-pointer hover:text-primary">search</span>
+                    <div class="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-[#1A1D29] rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 hidden z-50 overflow-hidden" id="desktop-search-results">
+                        <div class="search-suggestions-list max-h-[400px] overflow-y-auto search-results"></div>
+                        <div class="p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-gray-50 dark:bg-[#151926]">
+                            <button class="text-xs font-semibold text-primary hover:text-primary/80 uppercase tracking-wide">View all results</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="sm:hidden text-gray-600 dark:text-gray-200" onclick="toggleMobileSearch()">
+                    <span class="material-symbols-outlined">search</span>
+                </button>
+            </div>
+        </div>
+        <div class="hidden sm:hidden bg-white dark:bg-[#0B0E19] border-b border-gray-200 dark:border-gray-800 p-3 absolute w-full top-16 left-0 z-30" id="mobile-search-bar">
+            <div class="relative">
+                <input class="w-full bg-gray-100 dark:bg-gray-800 text-sm rounded-full py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary dark:text-white border-none" oninput="handleSearch(this.value, 'mobile-search-results')" placeholder="Search movies, shows..." type="text">
+                <span class="material-symbols-outlined absolute right-3 top-2 text-gray-400 text-lg">search</span>
+                <div class="absolute top-full left-0 mt-2 w-full bg-white dark:bg-[#1A1D29] rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 hidden z-50 overflow-hidden" id="mobile-search-results">
+                    <div class="search-suggestions-list max-h-[60vh] overflow-y-auto search-results"></div>
+                    <div class="p-3 border-t border-gray-200 dark:border-gray-700 text-center bg-gray-50 dark:bg-[#151926]">
+                        <button class="text-xs font-semibold text-primary hover:text-primary/80 uppercase tracking-wide">View all results</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content Area -->
+    <main class="flex-grow pt-20 pb-12">
+        {{ content }}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-footer-dark border-t border-gray-200 dark:border-gray-800 mt-auto">
+        <div class="container mx-auto px-4 py-8 md:py-12">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div class="flex-1 max-w-2xl">
+                    <img alt="Quravel Logo" class="h-8 mb-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDjh9n3OohvRl-puh70ZKoP5H8qhQCvVlRgCJp2kxDqRAecnlc19rzd2ly7GUNlWQZesfoxZFBHgiPMeXou8CoIUJGWBOmoTgdxgOTFFapo9AY0VQClcH3_JOsbjEN2JGjw3FK57B-9-AV9f_i4DDV-BnLTsVHdokIoSWk6UE6nwS8nSl2jvh1O7ltHmy6TEfKNP_o7oH7yaNMrOB3eTjAz49lo44t8O3rTW6P29kyJdU55TI89SA_lEnUU4sJSctsb3ncV1rjYR4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+                        Quravel offers free, ad-free access to top movies and series in stunning quality. Stream effortlessly or save for later with easy downloads, perfect for movie lovers on the go!
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-500">
+                        This site does not store any files on our server, we only linked to the media which is hosted on 3rd party services.
+                        <br>
+                        watch free movies, watch free tv shows, free movies online
+                    </p>
+                </div>
+                <div class="flex flex-col items-center md:items-end gap-2 w-full md:w-auto">
+                    <div class="flex gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        <a class="hover:text-primary transition-colors" href="https://editor.wix.com/wixel-view/forms/7405900275916997729">REQUEST</a>
+                        <a class="hover:text-primary transition-colors" href="https://editor.wix.com/wixel-view/forms/7405900275916997729">CONTACT</a>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-500 mt-2 text-center md:text-right w-full">
+                        <span class="text-primary font-bold">Quravel</span>
+                        <br>
+                        @ 2025 Quravel
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const overlay = document.getElementById('mobile-menu-overlay');
+            menu.classList.toggle('menu-open');
+            overlay.classList.toggle('hidden');
+        }
+        
+        // Mobile Search Toggle
+        function toggleMobileSearch() {
+            const searchBar = document.getElementById('mobile-search-bar');
+            searchBar.classList.toggle('hidden');
+        }
+        
+        // Mobile Dropdown Accordion
+        function toggleMobileDropdown(id) {
+            const dropdown = document.getElementById(id);
+            dropdown.classList.toggle('hidden');
+            const arrowId = id === 'genre-mobile' ? 'genre-arrow' : 'country-arrow';
+            const arrow = document.getElementById(arrowId);
+            if (dropdown.classList.contains('hidden')) {
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                arrow.style.transform = 'rotate(180deg)';
+            }
+        }
+        
+        // Hero Carousel Logic
+        let currentSlide = 0;
+        
+        // Initialize heart status on load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkHeroStatus(0);
+        });
+        
+        function changeSlide(direction) {
+            const slides = document.querySelectorAll('.carousel-slide');
+            const slideCounterDisplay = document.getElementById('current-slide-display');
+            if (slides.length === 0) return;
+            
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + direction + slides.length) % slides.length;
+            slides[currentSlide].classList.add('active');
+            
+            // Update counters
+            if(slideCounterDisplay) slideCounterDisplay.innerText = currentSlide + 1;
+            
+            // Check local storage for this slide
+            checkHeroStatus(currentSlide);
+        }
+        
+        // Hero Heart Dropdown Status - Updated with LocalStorage
+        function updateHeroStatus(status, slideIndex = currentSlide) {
+            // Save to local storage
+            localStorage.setItem(`quravel_hero_status_${slideIndex}`, status);
+            console.log(`Saved status for slide ${slideIndex}: ${status}`);
+            
+            // Visual feedback
+            checkHeroStatus(slideIndex);
+            
+            // Close dropdown effect (optional hack since CSS handles hover)
+            const activeSlide = document.querySelector(`.carousel-slide[data-slide-index="${slideIndex}"]`);
+            if(activeSlide) {
+                const dropdown = activeSlide.querySelector('.dropdown-container > div');
+                if(dropdown) {
+                    dropdown.style.visibility = 'hidden';
+                    dropdown.style.opacity = '0';
+                    setTimeout(() => {
+                        dropdown.style.visibility = '';
+                        dropdown.style.opacity = '';
+                    }, 100);
+                }
+            }
+        }
+        
+        function checkHeroStatus(slideIndex) {
+            const status = localStorage.getItem(`quravel_hero_status_${slideIndex}`);
+            const activeSlide = document.querySelector(`.carousel-slide[data-slide-index="${slideIndex}"]`);
+            if(activeSlide) {
+                const btn = activeSlide.querySelector('.status-btn');
+                if (btn) {
+                    const icon = btn.querySelector('span');
+                    if(status) {
+                        // If status exists, change icon style (e.g., filled or colored)
+                        btn.classList.add('bg-primary', 'border-primary', 'text-white');
+                        btn.classList.remove('bg-white/10', 'border-white/10');
+                    } else {
+                        // Reset
+                        btn.classList.remove('bg-primary', 'border-primary');
+                        btn.classList.add('bg-white/10', 'border-white/10');
+                    }
+                }
+            }
+        }
+        
+        // Search Functionality
+        const allSearchData = [
+            {img: "https://lh3.googleusercontent.com/aida-public/AB6AXuD_WkTZM5ZJ-NmTWR2UarTBAlvQ7P9ypGwIngTqhz3x53h75oR2QehaiVHXzaZ4EdTlD7DKAbSY7ijEe53JM_Qy1bCiQ3scMkoeKM9P21Jul1ZTTeMx413_PevdOcmb47ryU920sKnA0ByZk2G-iqk0KmNn00obvswj1ep1sci1GkIQQ-ubl71d6VMhb-nRWkRCP4MgrN6zw5y4oW0kuIIRp48E3CwPOGW8HgQ-oHGsUk5CKPiXemUd6XhmHr4YMs6lRbqCLMOQLck", title: "Chainsaw Man - The Movie: Reze Arc", year: "2025", type: "Movie", genre: "Action"},
+            {img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBL8sSKQhkIHjJRpfaXPOb2Ntr-YMNUhdTfQQNGnnmqGZu3SSewBEFAnXpGTo1YxqHXlb8pOCJCZrgrSF00Ey3CMmhZW5Q7dqz5o0qIOeV3DXsmqV-RKQGF2yEnwCFPLqyZ1R9luYVGdw-P_L6bRKjMPRM2RO5ISubiOat46Ovv-uMFsJfxGzRT0ngWoCZXAiiHQbJOA91N5Wyn21gKPKb6rWilqbabiqUYqUEEe31UdFQXOki6b3glJcCnNMssztZkZ0UYU_mwBbY", title: "The Shawshank Redemption", year: "1994", type: "Movie", genre: "Drama"},
+            {img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBuupgb3nD25Wubm40iI5tWuP49EydCaUp0EiYjTBXI3qpDr-LerCLu9i6Cz1lAn9uEWj1X_Fo4FgoziLiAqHVGWLScn06tNXiGQnMbiwIt2Jrc5GUwtVkyxUxR-KnBNZOWx3ius4cMIi_7z-VZzkH8quuTo3pj8kme4akxKKbp_3vqbjKm9T8hT7rQXXLDHgki5FL3xJvGpHw8S68e_dM9PCjJcIIckD9hBK8E3s04iv_DuggJr6t4gvxdoUxAixkHyB5rAiCYW3k", title: "Return of the King", year: "2003", type: "Movie", genre: "Fantasy"},
+            {img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCwH3f4VjulnnLYk8EgFSCiOqFs12q4ivPSqucW7P7k4uOAN3qXURGd7iOxByylKHLJhbpiobEV442fMLZHwobXplWdRez-c71bcZODHHIHORqZw97zdSx_JgA4Cdym9n6VMtpcJXo3o5jc7jvKx13nsU2frrHJ8wgbcRH1cHIY8n7jLkRIsYOLDQ1uZWoGe99Imz98f_X9qskRvSTRVJiiJKF_DtE-ce0qw825vrwhgb66FQM3e_ymqoB8eBbjLZ5HuUePqbU5kYg", title: "The Godfather", year: "1972", type: "Movie", genre: "Crime"},
+            {img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCKepUuUHAz1GAAh9d1TP86fQ1cNEGF_A7Fi00ANN4rMbe5iAkgL18ZwXQ_bLabOJGS3Iw3kmWCMR-_bC6J8ZAQj7Fa0-ag_YKIFuGatJ4ZNgTMz3biJI_2j3tsHgv6s5Plmkoc0FaWk6FRXJ7WJDhwAwq6eIC8fEwWyZ8Qvnrk_GSsXRCVgO8Pvsa1YoJHTDbL3GoE4tSEYDIt8M5edImu39b2CQwvrurfgk06BuS_MZ3XIZgyYP78SnTXm3iVxTS6JSkhKhF0G4U", title: "Stranger Things", year: "2016", type: "TV Show", genre: "Sci-Fi"},
+            {img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBL8sSKQhkIHjJRpfaXPOb2Ntr-YMNUhdTfQQNGnnmqGZu3SSewBEFAnXpGTo1YxqHXlb8pOCJCZrgrSF00Ey3CMmhZW5Q7dqz5o0qIOeV3DXsmqV-RKQGF2yEnwCFPLqyZ1R9luYVGdw-P_L6bRKjMPRM2RO5ISubiOat46Ovv-uMFsJfxGzRT0ngWoCZXAiiHQbJOA91N5Wyn21gKPKb6rWilqbabiqUYqUEEe31UdFQXOki6b3glJcCnNMssztZkZ0UYU_mwBbY", title: "Breaking Bad", year: "2008", type: "TV Show", genre: "Crime"},
+            {img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDqiUc86NAc2oPWF0jZS6ltVT0qDRUQLGYe-vsh90aCjNPCKRUYsR2joEXfq121iCQ1DMhEXbbjY-Rm6ydRKKVvOD7XCHpsnpYv4oUDQP6h-KZ9tUpwQb33LAseATibNSPDDxAViL3XAYheHWPQCau7pQCd7-XFT2YjY86y-DFUxv6SfYoh27gsa2-RiKjPMnhZfSvjYzFQSeYDzy64a_9Lmf5_NT9MkYffdzHclH1EyMht0psBW3wqnbmTFh6wbG5Xh4VXCnRWONM", title: "Jujutsu Kaisen", year: "2020", type: "Anime", genre: "Action"},
+            {img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCwH3f4VjulnnLYk8EgFSCiOqFs12q4ivPSqucW7P7k4uOAN3qXURGd7iOxByylKHLJhbpiobEV442fMLZHwobXplWdRez-c71bcZODHHIHORqZw97zdSx_JgA4Cdym9n6VMtpcJXo3o5jc7jvKx13nsU2frrHJ8wgbcRH1cHIY8n7jLkRIsYOLDQ1uZWoGe99Imz98f_X9qskRvSTRVJiiJKF_DtE-ce0qw825vrwhgb66FQM3e_ymqoB8eBbjLZ5HuUePqbU5kYg", title: "One Piece", year: "1999", type: "Anime", genre: "Adventure"}
+        ];
+        
+        function handleSearch(query, resultsContainerId) {
+            const container = document.getElementById(resultsContainerId);
+            const list = container.querySelector('.search-suggestions-list');
+            if(query.length < 1) {
+                container.classList.add('hidden');
+                return;
+            }
+            
+            // Filter data (case insensitive)
+            const filtered = allSearchData.filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
+            
+            // Limit to 7 items as requested
+            const limitedResults = filtered.slice(0, 7);
+            
+            // Build HTML
+            if(limitedResults.length > 0) {
+                list.innerHTML = limitedResults.map(item => `
+                    <div class="flex gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0">
+                        <img src="${item.img}" alt="${item.title}" class="w-10 h-14 object-cover rounded shadow-sm flex-shrink-0">
+                        <div class="flex flex-col justify-center">
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white leading-tight mb-1">${item.title}</h4>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                <span>${item.year}</span>
+                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span>${item.type}</span>
+                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                <span>${item.genre}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                container.classList.remove('hidden');
+            } else {
+                 list.innerHTML = `
+                    <div class="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        No results found for "${query}"
+                    </div>
+                `;
+                container.classList.remove('hidden');
+            }
+        }
+        
+        // Close search dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const desktopSearch = document.getElementById('desktop-search-results');
+            const desktopInput = document.getElementById('desktop-search-input');
+            if (!desktopInput.contains(event.target) && !desktopSearch.contains(event.target)) {
+                desktopSearch.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
